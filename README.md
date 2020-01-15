@@ -1,8 +1,13 @@
-# Base Protocol
+# Language Server Protocol Specification - 3.14
+以下の文書は [Language Server Protocol Specification - 3.14](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/) の日本語訳である。
+
+<a rel="license" href="http://creativecommons.org/licenses/by/3.0/"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="https://i.creativecommons.org/l/by/3.0/88x31.png" /></a>
+
+## Base Protocol
 ベースプロトコルはヘッダ部とコンテント部で構成される(HTTP と似ている)。ヘッダ部
 とコンテント部は `\r\n` で分割される。
 
-## Header Part
+### Header Part
 ヘッダ部はヘッダフィールドで構成される。それぞれのヘッダフィールドは `: `(コロ
 ンとスペース) で分割された名前と値で構成される。それぞれのヘッダフィールドは
 `\r\n` で終了する。最後のヘッダフィールドとヘッダ全体はそれぞれ `\r\n` で終了す
@@ -19,7 +24,7 @@
 ヘッダ部には 'ascii' でエンコードされる。これはヘッダ部とコンテント部を分割する
 `\r\n` も含む。
 
-## Content Part
+### Content Part
 実際のメッセージの中身が含まれる。メッセージのコンテント部にはリクエスト、レス
 ポンス、通知を記述するために [JSON-RPC](https://www.jsonrpc.org/) が使われる。
 コンテント部は `Content-Type` フィールドで与えられる `charset` でエンコードされ
@@ -31,7 +36,7 @@
 と正しいエンコード形式名ではない。) 後方互換性のため、サーバ、クライアント双方
 は `utf8` を `utf-8` として扱うことを強く推奨する。
 
-## Example:
+### Example:
 ```
 Content-Length: ...\r\n
 \r\n
@@ -45,11 +50,11 @@ Content-Length: ...\r\n
 }
 ```
 
-## Base Protocol JSON structures
+### Base Protocol JSON structures
 次の TypeScript 定義はベースとなる [JSON-RPC
 protocol](https://www.jsonrpc.org/specification) を記述する。
 
-### Abstract Message
+#### Abstract Message
 メッセージは JSON-RPC として定義される。LSP では常に `jsonrpc` バージョンとして
 "2.0" を使う。
 
@@ -59,7 +64,7 @@ interface Message {
 }
 ```
 
-### Request Message
+#### Request Message
 リクエストメッセージはクライアントサーバ間のリクエストを記述する。全ての処理さ
 れたリクエストは必ず送信元にレスポンスを返さなければならない。
 
@@ -83,7 +88,7 @@ interface RequestMessage extends Message {
 }
 ```
 
-### Response Message
+#### Response Message
 レスポンスメッセージはリクエストの結果として送信される。リクエストが結果を提供
 しない場合でもリクエスト受信者は JSON RPC 仕様に従うためにレスポンスメッセージ
 を返す必要がある。この場合、`ResponseMessage` の `result` プロパティはリクエス
@@ -144,7 +149,7 @@ export namespace ErrorCodes {
 }
 ```
 
-### Notification Message
+#### Notification Message
 通知メッセージ。処理された通知メッセージはレスポンスを返してはならない。これら
 はイベントのように振る舞う
 
@@ -162,7 +167,7 @@ interface NotificationMessage extends Message {
 }
 ```
 
-### $ Notifications and Requests
+#### $ Notifications and Requests
 `$/` で始まるメソッドの通知とリクエストはプロトコル実装に依存するメッセージで、
 全てのクライアントまたはサーバでは実装できないかもしれない。例えばシングルスレッ
 ドで同期的なプログラミング言語を用いてサーバを実装する場合、`$/cancelRequest`
@@ -171,7 +176,7 @@ interface NotificationMessage extends Message {
 アントが `$/` から始まるリクエストを受けた場合、エラーコード
 `MethodNotFound`(`-32601`) でリクエストをエラーにしなければならない。
 
-### Cancellation Support
+#### Cancellation Support
 ベースプロトコルはリクエストのキャンセル機能を提供する。リクエストをキャンセルするためには、次のプロパティを通知メッセージとして送信する:
 
 *通知*:
@@ -193,7 +198,7 @@ open/hanging 状態のままにはできない。これは全てのリクエス�
 を返すことも許容している。リクエストがキャンセル時にエラーを返す場合、エラーコー
 ドは `ErrorCodes.RequestCancelled` を指定することを推奨する。
 
-# Language Server Protocol
+## Language Server Protocol
 LSP は前述のベースプロトコルでやりとりされる JSON-RPC リクエスト、レスポンス、
 通知メッセージの集まりとして定義される。このセクションではこのプロトコルで使用
 される基本的な JSON 構造の記述から始まる。これらの記述には TypeScript interface
@@ -210,8 +215,8 @@ LSP は前述のベースプロトコルでやりとりされる JSON-RPC リク
 るにはプロトコルの追加が必要である。例えば並列に編集することをサポートするため、
 ドキュメントのロックを取れるようにする。
 
-## Basic JSON Structures
-### URI
+### Basic JSON Structures
+#### URI
 URI は文字列として送信される。URI フォーマットは [https://tools.ietf.org/html/rfc3986](https://tools.ietf.org/html/rfc3986) で定義される。
 
 ```
@@ -240,7 +245,7 @@ scheme     authority       path        query   fragment
 type DocumentUri = string;
 ```
 
-### Text Documents
+#### Text Documents
 現在のプロトコルは文字列として表現できるコンテントからなるテキストドキュメント
 用に合わせられている。バイナリドキュメントはサポートされていない。ドキュメント
 内の位置(後述の `Position` の定義を参照)は0始まりの行と文字オフセットとして表さ
@@ -257,7 +262,7 @@ UTF-16 で `𐐀` は2文字単位として表現されるため、文字 `a` �
 export const EOL: string[] = ['\n', '\r\n', '\r'];
 ```
 
-### Position
+#### Position
 テキストドキュメント内の位置は0始まりの行と0始まりの文字オフセットで表現される。
 位置はエディタの "insert" カーソルのようにふたつの文字の間にある。`-1` で行末を
 表わす、などの特別な値はサポートされていない。
@@ -279,7 +284,7 @@ interface Position {
 }
 ```
 
-### Range
+#### Range
 テキストドキュメント内のレンジは開始位置(0始まり)と終了位置で表現される。レンジはエディタの選択範囲に相当する。よって終了位置は含まれない。行末文字を含むように行をレンジに指定したい場合は終了位置を次の行の始めに指定する。例えば:
 
 ```
@@ -301,7 +306,7 @@ interface Range {
 }
 ```
 
-### Location
+#### Location
 テキストファイル内の行などのリソース内の場所を表わす。
 
 ```ts
@@ -311,7 +316,7 @@ interface Location {
 }
 ```
 
-### LocationLink
+#### LocationLink
 ソースとターゲット間の位置のリンクを表わす。
 
 ```ts
@@ -346,7 +351,7 @@ interface LocationLink {
 }
 ```
 
-### Diagnostic
+#### Diagnostic
 コンパイラのエラーや注意などの診断結果を表わす。`Diagnostic` はリソース内でのみ
 有効。
 
@@ -429,7 +434,7 @@ export interface DiagnosticRelatedInformation {
 }
 ```
 
-### Command
+#### Command
 コマンドへの参照を表わす。UI でコマンドを表示するためのタイトルを提供する。コマ
 ンドは文字列の識別子によって識別される。コマンドを処理するために推奨される方法
 はクライアントとサーバが対応する機能を提供する場合、サーバ側でそれらの実行を実
@@ -453,7 +458,7 @@ interface Command {
 }
 ```
 
-### TextEdit
+#### TextEdit
 テキストドキュメントに適用される編集。
 
 ```ts
@@ -471,7 +476,7 @@ interface TextEdit {
 }
 ```
 
-### TextEdit[]
+#### TextEdit[]
 複雑なテキスト操作は、ドキュメントへの1つの変更を表わす `TextEdit` の配列で記述
 される。
 
@@ -481,7 +486,7 @@ interface TextEdit {
 編集が同一の開始位置を持つことは可能である。複数の挿入が同一の位置を持つ場合、
 配列の順序が結果のテキストに挿入された文字列が反映される順序を定義する。
 
-### TextDocumentEdit
+#### TextDocumentEdit
 単一のテキストドキュメント上の変更を記述する。テキストドドキュメントはこの編集
 が適用される前のテキストドキュメントのバージョンを確認できるようにするために
 `VersionedTextDocumentIdentifier` として参照される。`TextDocumentEdit` はバー
@@ -503,7 +508,7 @@ export interface TextDocumentEdit {
 }
 ```
 
-## File Resource changes
+### File Resource changes
 バージョン 3.13 から:
 
 ファイルリソース変更によりサーバはクライアントを通してファイルおよびフォルダを
@@ -614,7 +619,7 @@ export interface DeleteFile {
 }
 ```
 
-### WorkspaceEdit
+#### WorkspaceEdit
 ワークスペース編集はワークスペース内で管理される多くのリソースへの変更を表わす。
 編集操作は `changes` か `documentChanges` のどちらかを提供すべきである。クライ
 アントがバージョン管理されたドキュメントへの編集を操作可能で、`documentChanges`
@@ -648,7 +653,7 @@ export interface WorkspaceEdit {
 }
 ```
 
-### TextDocumentIdentifier
+#### TextDocumentIdentifier
 テキストドキュメントは URI で識別される。プロトコル上では URI は文字列として渡される。対応する JSON 構造は次のようになる:
 
 ```ts
@@ -660,7 +665,7 @@ interface TextDocumentIdentifier {
 }
 ```
 
-### TextDocumentItem
+#### TextDocumentItem
 クライアントからサーバへ転送されるテキストドキュメントのためのアイテム。
 
 ```ts
@@ -747,7 +752,7 @@ interface TextDocumentItem {
 | XSL | `xsl` |
 | YAML | `yaml` |
 
-### VersionedTextDocumentIdentifier
+#### VersionedTextDocumentIdentifier
 指定したバージョンのテキストドキュメントを示す識別子。
 
 ```ts
@@ -765,7 +770,7 @@ interface VersionedTextDocumentIdentifier extends TextDocumentIdentifier {
 }
 ```
 
-### TextDocumentPositionParams
+#### TextDocumentPositionParams
 1.0 では `TextDocumentPosition` はインラインパラメータであった。
 
 テキストドキュメントとその中での位置をリクエストに渡すために使われるパラメータ
@@ -785,7 +790,7 @@ interface TextDocumentPositionParams {
 }
 ```
 
-### DocumentFilter
+#### DocumentFilter
 ドキュメントフィルタは `language`、`scheme`、`pattern`を通してドキュメントを記
 述する。例としてディスク上の TypeScript ファイルを表わす。もう一つの例は
 `package.json` という名前の JSON ファイルを示すフィルタである:
@@ -828,7 +833,7 @@ export interface DocumentFilter {
 export type DocumentSelector = DocumentFilter[];
 ```
 
-### MarkupContent
+#### MarkupContent
 `MarkupContent` リテラルは異なるフォーマットで表わすことのできるコンテントの文
 字列値を表わす。現在は `plaintext` と `markdown` がサポートされるフォーマットで
 ある。`MarkupContent` は大抵 `CompletionItem` か `SignatureInformation` の結果
@@ -894,7 +899,7 @@ export interface MarkupContent {
 }
 ```
 
-## Actual Protocol
+### Actual Protocol
 このセクションは実際の LSP のドキュメントである。次のフォーマットに従う:
 
 * リクエストのヘッダ
@@ -902,7 +907,7 @@ export interface MarkupContent {
 * *レスポンス:* セクションはレスポンスのフォーマットを記述する。結果は成功時に返すデータを示す。`error.data` はエラー時に返すデータを示す。失敗時はすでに `error.code` と `error.message` フィールドがすでに含まれていることを覚えておくこと。これらのフィールドは特定のエラーコードまたはメッセージの使用を強制する場合にのみ指定される。サーバが自由に指定することを決定できる場合、ここには提示されない。
 * *登録オプション* セクションはリクエストまたは通知が動的な機能登録をサポートする場合の登録オプションを記述する。
 
-### Request, Notification and Response ordering
+#### Request, Notification and Response ordering
 リクエストのレスポンスはだいたいサーバまたはクライアント側にリクエストが届いた
 順番に送信されるべきである。例えばサーバが `textDocument/completion` リクエスト
 を受けてから `textDocument/signatureHelp` を受けた場合、たいてい
@@ -916,12 +921,12 @@ export interface MarkupContent {
 る。一方 `textDocument/definition` と `textDocument/rename` は後者の実行が前者
 に影響するため、恐らくサーバは順序を交換すべきではない。
 
-### Server lifetime
+#### Server lifetime
 現在のプロトコル使用ではサーバのライフサイクルはクライアント(例えば VS Code や
 Emacs のようなツール)によって管理されるように定義している。クライアント次第で
 サーバ(プロセス)の起動やシャットダウンが決定される。
 
-### Initialize Request
+#### Initialize Request
 `Initialize` リクエストはクライアントからサーバへ送られる最初のリクエストであ
 る。サーバがリクエストまたは通知を `initialize` リクエストより前に受けた場合は
 次のように振る舞うべきである:
@@ -997,7 +1002,7 @@ interface InitializeParams {
 `ClientCapabilities`、`TextDocumentClientCapabilities` と `WorkspaceClientCapabilities` は次のように定義される:
 
 
-#### `WorkspaceClientCapabilities` define capabilities the editor / tool provides on the workspace:
+##### `WorkspaceClientCapabilities` define capabilities the editor / tool provides on the workspace:
 バージョン 3.13 から追加: `ResourceOperationKind`、`FaulureHandlingKind`、クライアントの機能である `workspace.workspaceEdit.resourceOperations`、`workspace.workspaceEdit.failureHandling`
 
 ```ts
@@ -1158,7 +1163,7 @@ export interface WorkspaceClientCapabilities {
 }
 ```
 
-#### `TextDocumentClientCapabilities` define capabilities the editor / tool provides on text documents.
+##### `TextDocumentClientCapabilities` define capabilities the editor / tool provides on text documents.
 
 ```ts
 /**
@@ -1976,7 +1981,7 @@ interface ServerCapabilities {
 
 ```
 
-### Initialized notification
+#### Initialized notification
 `Initialized` 通知はクライアントが `initialize` リクエストの結果を受け取ってか
 らその他のリクエストまたは通知をサーバへ送る前にクライアントからサーバへ送信さ
 れる。サーバは `initialized` 通知を例えば動的な機能登録に使用できる。
@@ -1992,7 +1997,7 @@ interface InitializedParams {
 
 ```
 
-### Shutdown Request
+#### Shutdown Request
 `shutdown` リクエストはクライアントからサーバへ送信される。サーバをシャットダウ
 ンするよう要求するが、終了はしない(そうしなければレスポンスが正しくクライアント
 に送信されない可能性がある)。サーバに終了を要求するための `exit` 通知が別にあ
@@ -2008,7 +2013,7 @@ interface InitializedParams {
 * 結果: `null`
 * エラー: エラーコードと `shutdown` リクエスト中に発生した例外がセットされたメッセージ。
 
-### Exit notification
+#### Exit notification
 サーバ自身のプロセスの終了を要求するための通知。サーバは事前に `shutdown` リク
 エストを受信していた場合は `success` コード0で終了すべきであり、それ以外の場合
 は `error` コード1で終了する。
@@ -2017,7 +2022,7 @@ interface InitializedParams {
 * メソッド: `exit`
 * パラメータ: 空
 
-### ShowMessage Notification
+#### ShowMessage Notification
 `window/showMessage` 通知はクライアントに UI 上に特定のメッセージの表示を要求す
 るためにサーバからクライアントに送信される。
 
@@ -2062,7 +2067,7 @@ export namespace MessageType {
 }
 ```
 
-### ShowMessage Request
+#### ShowMessage Request
 `window/showMessageRequest` リクエストはクライアントに UI 上に特定のメッセージ
 の表示を要求するためにサーバからクライアントに送信される。`window/showMessage`
 通知に加えてリクエストにアクションを渡すことができ、クライアントからの応答を待
@@ -2076,7 +2081,7 @@ export namespace MessageType {
 * 結果: 選択された `MessageActionItem` または選択されていない場合は `null`
 * エラー: エラーコードと `window/showMessageRequest` リクエスト中に発生した例外がセットされたメッセージ。
 
-### LogMessage Notification
+#### LogMessage Notification
 `window/logMessage` 通知はクライアントに特定のメッセージをログに残す要求をする
 ためにサーバからクライアントに送信される。
 
@@ -2100,7 +2105,7 @@ interface LogMessageParams {
 
 `type` は上記で定義した。
 
-### Telemetry Notification
+#### Telemetry Notification
 `telemetry/event` 通知はクライアントにテレメトリのログ保存を要求するためにサー
 バからクライアントに送信される。
 
@@ -2108,7 +2113,7 @@ interface LogMessageParams {
 * メソッド: `telemetry/event`
 * パラメータ: `any`
 
-### Register Capability
+#### Register Capability
 `client/registerCapability` リクエストはクライアント上の新たな機能を登録するた
 めにサーバから送信される。全てのクライアントが動的な機能登録をサポートする必要
 はない。クライアントは特定のクライアント機能の `dynamicRegistration` プロパティ
@@ -2191,7 +2196,7 @@ export interface TextDocumentRegistrationOptions {
 * 結果: void
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
 
-### Unregister Capability
+#### Unregister Capability
 `client/unregisterCapability` リクエストは以前に登録された機能を解除するために
 サーバからクライアントに送信される。
 
@@ -2244,7 +2249,7 @@ export interface UnregistrationParams {
 * 結果: void
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
 
-#### Workspace folders request
+##### Workspace folders request
 バージョン 3.6.0 から
 
 多くのツールがワークスペース毎に一つ以上のルートフォルダをサポートする。例えば
@@ -2285,7 +2290,7 @@ export interface WorkspaceFolder {
 
 * エラー: エラーコードと `workspace/workspaceFolders` リクエスト中に発生した例外がセットされたメッセージ。
 
-#### DidChangeWorkspaceFolders Notification
+##### DidChangeWorkspaceFolders Notification
 バージョン 3.6.0 から
 
 `workspace/didChangeWorkspaceFolders` 通知はワークスペース設定が変更されたこと
@@ -2334,7 +2339,7 @@ export interface WorkspaceFoldersChangeEvent {
 
 ```
 
-### DidChangeConfiguration Notification
+#### DidChangeConfiguration Notification
 設定変更を知らせるためにクライアントからサーバに送信される通知。
 
 *通知:*
@@ -2350,7 +2355,7 @@ interface DidChangeConfigurationParams {
 }
 ```
 
-### Configuration Request
+#### Configuration Request
 バージョン 3.6.0 から
 
 `workspace/configuration` リクエストはクライアントから設定を取得するためにサー
@@ -2394,7 +2399,7 @@ export interface ConfigurationItem {
 * 結果: `any[]`
 * エラー: エラーコードと `workspace/configuration` リクエスト中に発生した例外がセットされたメッセージ。
 
-### DidChangeWatchedFiles Notification
+#### DidChangeWatchedFiles Notification
 ファイル監視通知はクライアントにより監視されたファイルへの変更を検出したときに
 クライアントからサーバへ送信される通知。サーバはそれらのファイルイベントを登録
 メカニズムを用いて登録することが推奨される。以前の実装ではクライアントはサーバ
@@ -2510,7 +2515,7 @@ export namespace WatchKind {
 
 ```
 
-### Workspace Symbols Request
+#### Workspace Symbols Request
 ワークスペースシンボルリクエストはクエリ文字列に該当するプロジェクト全体のシン
 ボルを一覧するためにクライアントからサーバへ送信される。
 
@@ -2536,7 +2541,7 @@ interface WorkspaceSymbolParams {
 
 *登録オプション:* 空
 
-### Execute a command
+#### Execute a command
 `workspace/executeCommand` リクエストはサーバ上でコマンドを実行するためにクライ
 アントからサーバへ送信される。大抵の場合サーバは `WorkspaceEdit` 構造体を作成
 し、サーバからクライアントに送られる `workspace/applyEdit` を用いてワークスペー
@@ -2579,7 +2584,7 @@ export interface ExecuteCommandRegistrationOptions {
 
 ```
 
-### Applies a WrokspaceEdit
+#### Applies a WrokspaceEdit
 `workspace/applyEdit` リクエストはクライアント側のリソースを変更するためにサー
 バからクライアントに送信される。
 
@@ -2623,7 +2628,7 @@ export interface ApplyWorkspaceEditResponse {
 
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
 
-### DidOpenTextDocument Notification
+#### DidOpenTextDocument Notification
 ドキュメントオープン通知は新しいテキストドキュメントを開いたことを知らせるため
 にクライアントからサーバへ送信される。ドキュメントの実体はクライアントに管理さ
 れ、サーバはドキュメントの URI から実体を読もうとしてはならない。この意味で
@@ -2654,7 +2659,7 @@ interface DidOpenTextDocumentParams {
 
 *登録オプション:* `TextDocumentRegisterationOptions`
 
-### DidChangeTextDocument Notification
+#### DidChangeTextDocument Notification
 ドキュメント変更通知はテキストドキュメントへの変更を伝えるためにクライアントか
 らサーバへ送信される。2.0 でパラメータが適切なバージョン番号と言語識別子を持つ
 ように変更された。
@@ -2717,7 +2722,7 @@ export interface TextDocumentChangeRegistrationOptions extends TextDocumentRegis
 
 ```
 
-### WillSaveTextDocument Notification
+#### WillSaveTextDocument Notification
 `WillSaveTextDocument` 通知はドキュメントが保存される前にクライアントからサーバ
 へ送信される。
 
@@ -2766,7 +2771,7 @@ export namespace TextDocumentSaveReason {
 
 *登録オプション:* `TextDocumentRegisterOptions`
 
-### WillSaveWaitUntilTextDocument Request
+#### WillSaveWaitUntilTextDocument Request
 `WillSaveWaitUntilTextDocument` リクエストはドキュメントが保存される前にクライ
 アントからサーバに送信される。リクエストは保存されるまでにテキストドキュメント
 に適用された `TextEdit` の配列を返すことができる。テキスト編集の計算に非常に時
@@ -2784,7 +2789,7 @@ export namespace TextDocumentSaveReason {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### DidSaveTextDocument Notification
+#### DidSaveTextDocument Notification
 `DidSaveTextDocument` 通知はクライアントでドキュメントを保存したときにクライア
 ントからサーバへ送信される。
 
@@ -2818,7 +2823,7 @@ export interface TextDocumentSaveRegistrationOptions extends TextDocumentRegistr
 
 ```
 
-### DidCloseTextDocument Notification
+#### DidCloseTextDocument Notification
 `DidCloseTextDocument` 通知はクライアントでドキュメントが閉じられたときにクライ
 アントからサーバへ送信される。ドキュメントの実体はドキュメント URI の指す先に存
 在する(例えばドキュメント URI がファイル URI の場合実体はディスクに存在する)。
@@ -2843,7 +2848,7 @@ interface DidCloseTextDocumentParams {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### PublishDiagnostics Notification
+#### PublishDiagnostics Notification
 `PublishDiagnostics` 通知は検証結果を伝えるためにサーバからクライアントに送信さ
 れる。
 
@@ -2876,7 +2881,7 @@ interface PublishDiagnosticsParams {
 
 ```
 
-### Completion Request
+#### Completion Request
 `Completion` リクエストは与えられたカーソル位置の補完候補を計算するためにクライ
 アントからサーバへ送信される。補完候補は
 [IntelliSense](https://code.visualstudio.com/docs/editor/editingevolved#_intellisense)
@@ -3171,26 +3176,26 @@ export interface CompletionRegistrationOptions extends TextDocumentRegistrationO
 補完候補はスニペットをサポートする(`InsertTextFormat.Snippet` を参照)。スニペッ
 トのフォーマットは次のように定義される。
 
-#### Snippet Syntax
+##### Snippet Syntax
 スニペットの `body` はカーソルの操作とテキスト入力のための特別な構成要素を使う
 ことができる。次はそれらの構文と機能である:
 
-#### Tab stops
+##### Tab stops
 タブ位置により、エディタのカーソルをスニペット内で移動させることができる。`$1`、
 `$2` でカーソル位置を指定する。数字はタブ位置に移動する順序であり、`$0` は最後
 のカーソル位置を記述する。複数のタブ位置はリンクしており、更新は同期される。
 
-#### Placeholders
+##### Placeholders
 プレースホルダは `${1:foo}` のような、値付きのタブ位置である。プレースホルダの
 テキストは挿入され、簡単に変更できるように選択される。プレースホルダは
 `${1:another ${2:placeholder}}` のように、ネストすることができる。
 
-#### Choice
+##### Choice
 プレースホルダは値として選択肢を持つ。構文は、例えば `${1|one,two,three|} のよ
 うに、カンマ区切りで列挙された、パイプで囲まれた値である。スニペットが挿入され、
 プレースホルダが選択されたとき、選択肢はユーザに値を選択するよう促す。
 
-#### Variables
+##### Variables
 `$name` または `${name:default}` で変数の値を挿入することができる。変数の中身が
 セットされていない場合、`default` または空文字列が挿入される。不明な変数(つまり
 名前が宣言されていない)の場合、変数名が挿入され、プレースホルダに変換される。
@@ -3206,7 +3211,7 @@ export interface CompletionRegistrationOptions extends TextDocumentRegistrationO
 * `TM_DIRECTORY` 現在のドキュメントのディレクトリ
 * `TM_FILEPATH` 現在のドキュメントの絶対パス
 
-#### Variable Transforms
+##### Variable Transforms
 変換により入力前の変数の値を編集することができる。変換の定義は3つの部分からな
 る。
 
@@ -3229,7 +3234,7 @@ ${TM_FILENAME/(.*)\..+$/$1/}
   |-> ファイル名の解決
 ```
 
-#### Grammar
+##### Grammar
 スニペットの EBNF([extended Backus-Naur
 form](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)) を以下
 に示す。`\`(バックスラッシュ) により、`$`、`}`、`\` をエスケープできる。選択肢
@@ -3256,7 +3261,7 @@ text        ::= .*
 
 ```
 
-### Completion Item Resolve Request
+#### Completion Item Resolve Request
 このリクエストは与えられた補完候補の追加情報を解決するためにクライアントからサー
 バへ送信される。
 
@@ -3269,7 +3274,7 @@ text        ::= .*
 * エラー: エラーコードと `completionItem/resolve` リクエスト中に発生した例外がセットされたメッセージ。
 
 
-### Hover Request
+#### Hover Request
 `Hover` リクエストは与えられたテキスト位置でのホバー情報を要求するためにクライ
 アントからサーバへ送信される。
 
@@ -3324,7 +3329,7 @@ type MarkedString = string | { language: string; value: string };
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Signature Help Request
+#### Signature Help Request
 `Signnature Help` リクエストは与えられたカーソル位置でのシグネチャ情報を要求す
 るためにクライアントからサーバへ送信される。
 
@@ -3435,7 +3440,7 @@ export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrati
 
 ```
 
-### Goto Declaration Request
+#### Goto Declaration Request
 バージョン 3.14.0 から
 
 `Goto Declaration` リクエストは与えられたテキストドキュメント位置のシンボルの宣
@@ -3456,7 +3461,7 @@ export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrati
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Goto Definition Request
+#### Goto Definition Request
 バージョン 3.14.0 から
 
 `Goto Definition` リクエストは与えられたテキストドキュメント位置のシンボルの定
@@ -3477,7 +3482,7 @@ export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrati
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Goto Type Definition Request
+#### Goto Type Definition Request
 バージョン 3.6.0 から
 
 `Goto Type Definition` リクエストは与えられたテキストドキュメント位置のシンボル
@@ -3498,7 +3503,7 @@ export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrati
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Goto Implementation Request
+#### Goto Implementation Request
 バージョン 3.6.0 から
 
 `Goto Implementation` リクエストは与えられたテキストドキュメント位置のシンボル
@@ -3519,7 +3524,7 @@ export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrati
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Find References Request
+#### Find References Request
 `Find References` リクエストは与えられたテキスト位置で記述されているシンボルの
 プロジェクト全体での参照を解決するためにクライアントからサーバへ送信される。
 
@@ -3546,7 +3551,7 @@ interface ReferenceContext {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Document Highlights Request
+#### Document Highlights Request
 `Document Hightlights` リクエストは与えられたテキスト位置のドキュメントハイライ
 トを解決するためにクライアントからサーバへ送信される。プログラミング言語の場合、
 通常、このファイルをスコープとするシンボルへの全ての参照をハイライトする。しか
@@ -3606,7 +3611,7 @@ export namespace DocumentHighlightKind {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Document Symbols Request
+#### Document Symbols Request
 `Document Symbols` リクエストはクライアントからサーバへ送信される。結果はいずれ
 かである
 
@@ -3756,7 +3761,7 @@ interface SymbolInformation {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Code Action Request
+#### Code Action Request
 `Code Action` リクエストは与えられたテキストドキュメントと範囲上でコマンドを実
 行するためにクライアントからサーバへ送信される。コマンドは典型的には問題を修正
 するかコードを綺麗/リファクタリングするものである。`textDocument/codeAction` リ
@@ -3959,7 +3964,7 @@ export interface CodeActionRegistrationOptions extends TextDocumentRegistrationO
 
 ```
 
-### Code Lens Request
+#### Code Lens Request
 `Code Lens` リクエストは与えられたテキストドキュメントのコードレンズを計算するためにクライアントからサーバへ送信される。
 
 *リクエスト:*
@@ -4019,7 +4024,7 @@ export interface CodeLensRegistrationOptions extends TextDocumentRegistrationOpt
 
 ```
 
-### Code Lens Resolve Request
+#### Code Lens Resolve Request
 `Code Lens Resolve` リクエストは与えられたコードレンズアイテムのコマンドを解決
 するためにクライアントからサーバへ送信される。
 
@@ -4031,7 +4036,7 @@ export interface CodeLensRegistrationOptions extends TextDocumentRegistrationOpt
 * 結果: `CodeLens`
 * エラー: エラーコードと `codeLens/resolve` リクエスト中に発生した例外がセットされたメッセージ。
 
-### Document Link Request
+#### Document Link Request
 `Document Link` リクエストはドキュメントへのリンクを要求するためにクライアント
 からサーバへ送信される。
 
@@ -4087,7 +4092,7 @@ export interface DocumentLinkRegistrationOptions extends TextDocumentRegistratio
 
 ```
 
-### Document Link Resolve Request
+#### Document Link Resolve Request
 `Document Link Resolve` リクエストは与えられた `DocumentLink` を解決するために
 クライアントからサーバへ送信される。
 
@@ -4099,7 +4104,7 @@ export interface DocumentLinkRegistrationOptions extends TextDocumentRegistratio
 * 結果: `DocumentLink`
 * エラー: エラーコードと `documentLink/resolve` リクエスト中に発生した例外がセットされたメッセージ。
 
-### Document Color Request
+#### Document Color Request
 バージョン 3.6.0 から
 
 `Document Color` リクエストは与えられたテキストドキュメントで見付かった全ての色
@@ -4169,7 +4174,7 @@ interface Color {
 
 * エラー: エラーコードと `textDocument/documentColor` リクエスト中に発生した例外がセットされたメッセージ。
 
-### Color Presentation Request
+#### Color Presentation Request
 バージョン 3.6.0 から
 
 `Color Presentation` リクエストは与えられた位置の色値の表現一覧を取得するために
@@ -4230,7 +4235,7 @@ interface ColorPresentation {
 
 * エラー: エラーコードと `textDocument/colorPresentation` リクエスト中に発生した例外がセットされたメッセージ。
 
-### Document Formatting Request
+#### Document Formatting Request
 `Document Formatting` リクエストはドキュメント全体をフォーマットするためにクラ
 イアントからサーバへ送信される。
 
@@ -4278,7 +4283,7 @@ interface FormattingOptions {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Document Range Formatting Request
+#### Document Range Formatting Request
 `Document Range Formatting` リクエストは与えられたドキュメントの範囲をフォーマッ
 トするためにクライアントからサーバへ送信される。
 
@@ -4311,7 +4316,7 @@ interface DocumentRangeFormattingParams {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-### Document on Type Formatting Request
+#### Document on Type Formatting Request
 `Document on Type Formatting` リクエストは入力中のドキュメントをフォーマットす
 るためにクライアントからサーバへ送信される。
 
@@ -4363,7 +4368,7 @@ export interface DocumentOnTypeFormattingRegistrationOptions extends TextDocumen
 
 ```
 
-### Rename Request
+#### Rename Request
 `Rename` リクエストは、クライアントがシンボルのワークスペース全体でのリネームを
 行なうために、サーバがワークスペースへの変更を計算するために、クライアントから
 サーバへ送信される。
@@ -4409,7 +4414,7 @@ export interface RenameRegistrationOptions extends TextDocumentRegistrationOptio
 
 ```
 
-### Prepare Rename Request
+#### Prepare Rename Request
 バージョン 3.12.0 から
 
 `Prepare Rename` リクエストは与えられた場所でのリネーム処理の妥当性をテストする
@@ -4425,7 +4430,7 @@ export interface RenameRegistrationOptions extends TextDocumentRegistrationOptio
 
 *登録オプション:*
 
-### Folding Range Request
+#### Folding Range Request
 バージョン 3.10.0 から
 
 `Folding Range` リクエストは与えられたテキストドキュメントの折り畳まれた全て範囲を返すためにクライアントからサーバへ送信される。
@@ -4503,4 +4508,4 @@ export interface FoldingRange {
 
 *登録オプション:* `TextDocumentRegistrationOptions`
 
-## Implementation considerations
+### Implementation considerations
