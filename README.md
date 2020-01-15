@@ -698,6 +698,7 @@ interface TextDocumentItem {
 する。
 
 | 言語 | 識別子 |
+| ---- | ------ |
 | ABAP | `abap` |
 | Windows Bat | `bat` |
 | BibTeX | `bibtex` |
