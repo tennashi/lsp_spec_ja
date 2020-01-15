@@ -796,8 +796,8 @@ interface TextDocumentPositionParams {
 `package.json` という名前の JSON ファイルを示すフィルタである:
 
 ```json
-{ language: 'typescript', scheme: 'file' }
-{ language: 'json', pattern: '**/package.json' }
+{ "language": "typescript", "scheme": "file" }
+{ "language": "json", "pattern": "**/package.json" }
 ```
 
 ```ts
