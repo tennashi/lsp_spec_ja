@@ -21,7 +21,7 @@
 | Content-Length | number | コンテント部のバイト数。このヘッダは必須 |
 | Content-Type | string | コンテント部の mime type。デフォルトは `application/vscode-jsonrpc; charset=utf-8` |
 
-ヘッダ部には 'ascii' でエンコードされる。これはヘッダ部とコンテント部を分割する
+ヘッダ部は 'ascii' でエンコードされる。これはヘッダ部とコンテント部を分割する
 `\r\n` も含む。
 
 ### Content Part
@@ -287,11 +287,13 @@ interface Position {
 #### Range
 テキストドキュメント内のレンジは開始位置(0始まり)と終了位置で表現される。レンジはエディタの選択範囲に相当する。よって終了位置は含まれない。行末文字を含むように行をレンジに指定したい場合は終了位置を次の行の始めに指定する。例えば:
 
-```
+```json
 {
-    start: { line: 5, character: 23 },
-    end : { line 6, character : 0 }
+    "start": { "line": 5, "character": 23 },
+    "end": { "line": 6, "character": 0 }
 }
+```
+
 ```ts
 interface Range {
 	/**
@@ -2010,7 +2012,7 @@ interface InitializedParams {
 * メソッド: `shutdown`
 * パラメータ: 空
 
-* レスポンス:*
+*レスポンス:*
 * 結果: `null`
 * エラー: エラーコードと `shutdown` リクエスト中に発生した例外がセットされたメッセージ。
 
@@ -2078,7 +2080,7 @@ export namespace MessageType {
 * メソッド: `window/showMessageRequest`
 * パラメータ: 次で定義される `ShowMessageRequestParams`:
 
-* レスポンス:*
+*レスポンス:*
 * 結果: 選択された `MessageActionItem` または選択されていない場合は `null`
 * エラー: エラーコードと `window/showMessageRequest` リクエスト中に発生した例外がセットされたメッセージ。
 
