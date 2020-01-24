@@ -51,8 +51,7 @@ Content-Length: ...\r\n
 ```
 
 ### Base Protocol JSON structures
-次の TypeScript 定義はベースとなる [JSON-RPC
-protocol](https://www.jsonrpc.org/specification) を記述する。
+次の TypeScript 定義はベースとなる [JSON-RPC protocol](https://www.jsonrpc.org/specification) を記述する。
 
 #### Abstract Message
 メッセージは JSON-RPC として定義される。LSP では常に `jsonrpc` バージョンとして
