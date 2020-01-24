@@ -307,8 +307,9 @@ interface Position {
 
 	/**
 	 * ドキュメント内の行中の文字オフセット (0始まり)。行は文字列として表現される
-	 * ことを仮定し、`character` の値は `character` と `caracter + 1` 間のすき間
-	 * を表現する。
+	 * と仮定し、`character` の値は `character` と `caracter + 1` 間のすき間を表
+	 * 現する。
+	 *
 	 * `character` の値が行の長さを越えた場合はデフォルトでは行の長さに戻る。
 	 */
 	character: number;
