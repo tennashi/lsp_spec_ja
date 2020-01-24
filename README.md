@@ -359,10 +359,10 @@ interface Location {
 interface LocationLink {
 
 	/**
-	 * このリンクのソースのスパン
+	 * このリンクの原点のスパン
 	 *
 	 * マウス操作の下線付きスパンとして使われる。デフォルトではマウス位置の単語の
-	 * レンジが使われる。
+	 * 範囲が使われる。
 	 */
 	originSelectionRange?: Range;
 
@@ -372,15 +372,14 @@ interface LocationLink {
 	targetUri: DocumentUri;
 
 	/**
-	 * このリンクのターゲットレンジ。ターゲットが例えばシンボルの場合、ターゲット
-	 * レンジはこのシンボルを含む範囲で、先頭/末尾の空白は含まれないが、コメント
-	 * など他のものは全て含まれる。これは通常エディタでレンジをハイライトするとき
-	 * に使われる。
+	 * このリンクの対象範囲。ターゲットが例えばシンボルの場合、対象範囲はこのシン
+	 * ボルを含む範囲で、先頭/末尾の空白は含まれないが、コメントなど他のものは全
+	 * て含まれる。これは通常エディタでレンジをハイライトするときに使われる。
 	 */
 	targetRange: Range;
 
 	/**
-	 * このリンクを辿るときに選択し、表示する範囲。例えば関数名。
+	 * このリンクを辿るときに選択し、表示するべき範囲。例えば関数名。
 	 * `targetRange` に含まれている必要がある。`DocumentSymbol#range` も参照。
 	 */
 	targetSelectionRange: Range;
@@ -388,19 +387,19 @@ interface LocationLink {
 ```
 
 #### Diagnostic
-コンパイラのエラーや注意などの診断結果を表わす。`Diagnostic` はリソース内でのみ
-有効。
+コンパイラのエラーや警告などの診断結果を表わす。`Diagnostic` はリソース内でのみ
+有効である。
 
 ```ts
 interface Diagnostic {
 	/**
-	 * メッセージが適用されるレンジ。
+	 * メッセージが適用される範囲。
 	 */
 	range: Range;
 
 	/**
-	 * 診断結果の重大度。省略可能。省略した場合、診断結果をエラー、注意、情報、ヒ
-	 * ントとして解釈するのはクライアント次第である。
+	 * 診断結果の重大度。省略可能。省略した場合、クライアント次第で診断結果をエ
+	 * ラー、警告、情報、ヒントとして解釈する。
 	 */
 	severity?: number;
 
@@ -421,6 +420,13 @@ interface Diagnostic {
 	message: string;
 
 	/**
+	 * 診断結果についての追加のメタデータ。
+	 *
+	 * @since 3.15.0
+	 */
+	tags?: DiagnosticTag[];
+
+	/**
 	 * 関連する診断情報の配列、例えばスコープ内のシンボル名が衝突した場合このプロ
 	 * パティから全ての定義をマークできる。
 	 */
@@ -428,7 +434,7 @@ interface Diagnostic {
 }
 ```
 
-LSP は次の重大度をサポートしている:
+LSP は現在次の重大度とタグをサポートしている:
 ```ts
 namespace DiagnosticSeverity {
 	/**
@@ -436,7 +442,7 @@ namespace DiagnosticSeverity {
 	 */
 	export const Error = 1;
 	/**
-	 * 注意を報告する。
+	 * 警告を報告する。
 	 */
 	export const Warning = 2;
 	/**
@@ -449,7 +455,34 @@ namespace DiagnosticSeverity {
 	export const Hint = 4;
 }
 
+export type DiagnosticSeverity = 1 | 2 | 3 | 4;
+
+/**
+ * 診断タグ
+ *
+ * @since 3.15.0
+ */
+export namespace DiagnosticTag {
+	/**
+	 * 使われていない、または不要なコード。
+	 *
+	 * クライアントはエラー下線の代わりに、このタグをフェードアウトすることで診
+	 * 断結果を表示できる。
+	 */
+	export const Unnecessary: 1 = 1;
+	/**
+	 * 非推奨または廃止されたコード。
+	 *
+	 * クライアントはこのタグの打ち消し線で診断結果を表示できる。
+	 */
+	export const Deprecated: 2 = 2;
+}
+
+export type DiagnosticTag = 1 | 2;
+
 ```
+
+`DiagnosticRelatedInformation` は次のように定義される:
 
 ```ts
 /**
@@ -459,12 +492,12 @@ namespace DiagnosticSeverity {
  */
 export interface DiagnosticRelatedInformation {
 	/**
-	 * この関連診断結果の位置。
+	 * 診断結果に関連する位置。
 	 */
 	location: Location;
 
 	/**
-	 * この関連診断結果のメッセージ。
+	 * 診断結果のメッセージ。
 	 */
 	message: string;
 }
