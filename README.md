@@ -593,7 +593,7 @@ watchers などを参照)。対応する変更リテラルは次のようにな�
  */
 export interface CreateFileOptions {
 	/**
-	 * 存在するファイルを上書く。`ignoreIfExists` より優先される。
+	 * 存在するファイルを上書きする。`ignoreIfExists` より優先される。
 	 */
 	overwrite?: boolean;
 	/**
@@ -625,7 +625,7 @@ export interface CreateFile {
  */
 export interface RenameFileOptions {
 	/**
-	 * 存在するファイルを上書く。`ignoreIfExists` より優先される。
+	 * 存在するファイルを上書きする。`ignoreIfExists` より優先される。
 	 */
 	overwrite?: boolean;
 	/**
@@ -643,7 +643,7 @@ export interface RenameFile {
 	 */
 	kind: 'rename';
 	/**
-	 * 古い(存在している)位置。The old (existing) location.
+	 * 古い(存在している)位置。
 	 */
 	oldUri: DocumentUri;
 	/**
