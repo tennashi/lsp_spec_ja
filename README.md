@@ -559,10 +559,10 @@ interface TextEdit {
 #### TextDocumentEdit
 単一のテキストドキュメント上の変更を記述する。テキストドドキュメントはこの編集
 が適用される前のテキストドキュメントのバージョンを確認できるようにするために
-`VersionedTextDocumentIdentifier` として参照される。`TextDocumentEdit` はバー
-ジョン `Si` の全ての変更を記述し、バージョン `Si + 1` に移動する。
-そのため `TextDocumentEdit` の作成者は配列のソートやその他の順序付けをする必要
-はない。ただし編集は重なってはいけない。
+`VersionedTextDocumentIdentifier` として関連付けられる。`TextDocumentEdit` は
+バージョン `Si` の全ての変更を記述し、バージョン `Si + 1` に移動する。そのため
+`TextDocumentEdit` の作成者は配列のソートやその他の順序付けをする必要はない。た
+だし編集は重なってはならない。
 
 ```
 export interface TextDocumentEdit {
