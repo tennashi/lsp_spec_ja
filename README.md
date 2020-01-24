@@ -1298,6 +1298,49 @@ export interface WorkDoneProgressOptions {
 
 ```
 
+### Partial Result Progress
+バージョン 3.15.0 から
+
+部分的な結果は一般的な `$/progress` 通知を用いて報告される。部分的な結果の進行
+状況通知のペイロードは多くの場合、最終的な結果と同一である。例えば、
+`workspace/symbol` リクエストは結果の型として `SymbolInformation[]` を持つ。部
+分的な結果も `SymbolInformation[]` 型を持つ。クライアントがリクエストの部分的な
+結果通知を許可するかはリクエストパラメータの `partialResultToken` を追加するこ
+とで伝えられる。例えば、作業と部分的結果の進行状況をサポートする
+`textDocument/reference` リクエストは次のようになる:
+
+```json
+{
+	"textDocument": {
+		"uri": "file:///folder/file.ts"
+	},
+	"position": {
+		"line": 9,
+		"character": 5
+	},
+	"context": {
+		"includeDeclaration": true
+	},
+	// 作業進行状況の報告に使われるトークン。
+	"workDoneToken": "1d546990-40a3-4b77-b134-46622995f6ae",
+	// 部分的な結果の報告に使われるトークン。
+	"partialResultToken": "5f6f349e-4f81-4a3b-afff-ee04bff96804"
+}
+```
+
+`partialResultToken` は `textDocument/reference` リクエストの部分的な結果を報告
+するために使われる。
+
+サーバが `$/progress` への対応により部分的な結果を報告する場合、結果全体は n 個
+の `$/progress` 通知で行わなければならない。最終的なレスポンスは結果の値の項が
+空でなければならない。これは、他の部分的な結果や結果の置き換えなどの最終的な結
+果をどの様に処理すべきかという混乱を避けるためである。
+
+レスポンスがエラーを返す場合、与えられた部分的な結果を次のように扱うべきである:
+
+* `code` が `RequestCancelled` であるとき: クライアントは提供された結果を使うかは自由であるが、リクエストがキャンセルされたか未完了であるかは明確にするべきである。
+* その他の場合は部分的な結果を使用するべきではない。
+
 ### Actual Protocol
 このセクションは実際の LSP のドキュメントである。次のフォーマットに従う:
 
