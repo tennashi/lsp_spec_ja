@@ -998,6 +998,39 @@ export interface DocumentFilter {
 export type DocumentSelector = DocumentFilter[];
 ```
 
+#### StaticRegistrationOptions
+静的な登録オプションは、後に機能の登録解除をするために与えられたサーバコントロー
+ル ID での初期化時の機能を登録できる。
+
+```ts
+/**
+ * `initialize` リクエストで返される静的な登録オプション。
+ */
+interface StaticRegistrationOptions {
+	/**
+	 * リクエストを登録するために使われる ID。この ID はリクエストを解除するため
+	 * に使うことができる。Registration#id も参照。
+	 */
+	id?: string;
+}
+```
+
+#### TextDocumentRegistrationOptions
+テキストドキュメントの集まりに対する動的な登録リクエストのオプション。
+
+```ts
+/**
+ * 一般的なテキストドキュメント登録オプション。
+ */
+export interface TextDocumentRegistrationOptions {
+	/**
+	 * 登録のスコープを識別するためのドキュメントセレクタ。null の場合クライアン
+	 * ト側で提供されるドキュメントセレクタが使用される。
+	 */
+	documentSelector: DocumentSelector | null;
+}
+```
+
 #### MarkupContent
 `MarkupContent` リテラルは異なるフォーマットで表わすことのできるコンテントの文
 字列値を表わす。現在は `plaintext` と `markdown` がサポートされるフォーマットで
