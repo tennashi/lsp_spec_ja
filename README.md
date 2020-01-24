@@ -703,12 +703,12 @@ export interface WorkspaceEdit {
 	changes?: { [uri: DocumentUri]: TextEdit[]; };
 
 	/**
-	 * クライアントが `workspace.workspaceEdit.resourceOperations` を提供している
-	 * かに依存してドキュメントへの変更は、それぞれのテキストドキュメントの編集が
-	 * 扱う指定したバージョンのテキストドキュメントである n 個の異なるテキストド
-	 * キュメントへの変更を表現するための `TextDocumentEdit` の配列または
-	 * `TextDocumentEdit` の配列にファイル/フォルダへの作成、リネーム、削除操作を
-	 * 混ぜたもののいずれかが使含むことができる。
+	 * ドキュメントへの変更は、クライアントが
+	 * `workspace.workspaceEdit.resourceOperations` を提供しているかに依存して、
+	 * それぞれのテキストドキュメントの編集が扱う指定したバージョンのテキストド
+	 * キュメントである n 個の異なるテキストドキュメントへの変更を表現する
+	 * `TextDocumentEdit` の配列または `TextDocumentEdit` の配列にファイル/フォル
+	 * ダの作成、リネーム、削除操作を混ぜたもののいずれかが含むことができる。
 	 *
 	 * クライアントがバージョン管理されたドキュメントを操作できるかどうかはクライ
 	 * アントが `workspace.workspaceEdit.documentChanges` を提供するかどうかで表
