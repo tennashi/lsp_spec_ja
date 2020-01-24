@@ -149,8 +149,8 @@ export namespace ErrorCodes {
 ```
 
 #### Notification Message
-通知メッセージ。処理された通知メッセージはレスポンスを返してはならない。これら
-はイベントのように振る舞う
+`NotificationMessage`。処理された通知メッセージはレスポンスを返してはならない。
+これらはイベントのように振る舞う。
 
 ```ts
 interface NotificationMessage extends Message {
@@ -162,7 +162,7 @@ interface NotificationMessage extends Message {
 	/**
 	 * 通知のパラメータ。
 	 */
-	params?: Array<any> | object;
+	params?: array | object;
 }
 ```
 
