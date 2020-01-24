@@ -54,8 +54,8 @@ Content-Length: ...\r\n
 次の TypeScript 定義はベースとなる [JSON-RPC protocol](https://www.jsonrpc.org/specification) を記述する。
 
 #### Abstract Message
-メッセージは JSON-RPC として定義される。LSP では常に `jsonrpc` バージョンとして
-"2.0" を使う。
+一般的な `Message` は JSON-RPC として定義される。LSP では常に `jsonrpc` バージョ
+ンとして "2.0" を使う。
 
 ```ts
 interface Message {
