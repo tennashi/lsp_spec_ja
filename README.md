@@ -64,8 +64,8 @@ interface Message {
 ```
 
 #### Request Message
-リクエストメッセージはクライアントサーバ間のリクエストを記述する。全ての処理さ
-れたリクエストは必ず送信元にレスポンスを返さなければならない。
+`RequestMessage` はクライアントサーバ間のリクエストを記述する。処理されたリクエ
+ストは全て、送信元にレスポンスを返さなければならない。
 
 ```ts
 interface RequestMessage extends Message {
@@ -83,7 +83,7 @@ interface RequestMessage extends Message {
 	/**
 	 * メソッドのパラメータ。
 	 */
-	params?: Array<any> | object;
+	params?: array | object;
 }
 ```
 
