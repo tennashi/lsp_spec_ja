@@ -261,7 +261,7 @@ scheme     authority       path        query   fragment
 ```
 
 文字列を `scheme`、`authority`、`path`、`query`、`fragment` の URI コンポーネン
-トにパースするための node module もメンテナンスする。GitHub リポジトリは
+トにパースするための node module もメンテナンスしている。GitHub リポジトリは
 [https://github.com/Microsoft/vscode-uri](https://github.com/Microsoft/vscode-uri)
 で、npm module は
 [https://www.npmjs.com/package/vscode-uri](https://www.npmjs.com/package/vscode-uri)
