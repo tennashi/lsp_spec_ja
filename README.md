@@ -723,6 +723,97 @@ export interface WorkspaceEdit {
 }
 ```
 
+#### WorkspaceEditClientCapabilities
+バージョン 3.13 から追加: `ResourceOperationKind`、`FaulureHandlingKind`、クラ
+イアントの機能である `workspace.workspaceEdit.resourceOperations`、
+`workspace.workspaceEdit.failureHandling`
+
+ワークスペース編集機能は時間と共に進歩してきた。クライアントは次のクライアント
+機能でサポートする機能を記述できる。
+
+* プロパティパス(任意): `workspace.workspaceEdit`
+* プロパティタイプ: 次で定義される `WorkspaceEditClientCapabilities`
+
+```ts
+export interface WorkspaceEditClientCapabilities {
+	/**
+	 * クライアントは `WorkspaceEdit` でバージョン管理されたドキュメントの変更を
+	 * サポートする。
+	 */
+	documentChanges?: boolean;
+
+	/**
+	 * クライアントがサポートするリソース操作。クライアントは少なくともファイルと
+	 * フォルダへの 'create'、'rename'、'delete' をサポートすべきである。
+	 *
+	 * @since 3.13.0
+	 */
+	resourceOperations?: ResourceOperationKind[];
+
+	/**
+	 * ワークスペースへの編集が失敗した場合のクライアントの処理方法。
+	 *
+	 * @since 3.13.0
+	 */
+	failureHandling?: FailureHandlingKind;
+}
+
+/**
+ * クライアントがサポートするリソース操作種別。
+ */
+export type ResourceOperationKind = 'create' | 'rename' | 'delete';
+
+export namespace ResourceOperationKind {
+
+	/**
+	 * 新規ファイルやフォルダを作成することをサポートする。
+	 */
+	export const Create: ResourceOperationKind = 'create';
+
+	/**
+	 * 既存ファイルやフォルダをリネームすることをサポートする。
+	 */
+	export const Rename: ResourceOperationKind = 'rename';
+
+	/**
+	 * 既存ファイルやフォルダを削除することをサポートする。
+	 */
+	export const Delete: ResourceOperationKind = 'delete';
+}
+
+export type FailureHandlingKind = 'abort' | 'transactional' | 'undo' | 'textOnlyTransactional';
+
+export namespace FailureHandlingKind {
+
+	/**
+	 * ワークスペースへの変更を適用する際、一つでも変更が失敗した場合単純に破棄さ
+	 * れる。失敗した操作の前に実行された操作は実行されたままである。
+	 */
+	export const Abort: FailureHandlingKind = 'abort';
+
+	/**
+	 * 全ての操作はトランザクショナルに実行される。つまり、ワークスペースには全て
+	 * 成功するか全て変更しないかのどちらかのみが適用される。
+	 */
+	export const Transactional: FailureHandlingKind = 'transactional';
+
+
+	/**
+   * テキストファイルへの変更のみからなるワークスペースの編集はランザクショナル
+   * に実行される。変更に含まれるリソースへの変更(ファイルの作成、リネーム、削
+   * 除)には `abort` が適用される。
+	 */
+	export const TextOnlyTransactional: FailureHandlingKind = 'textOnlyTransactional';
+
+	/**
+	 * クライアントはすでに実行した操作を undo しようとする。しかし、その実行が成
+	 *  功することは保証されない。
+	 */
+	export const Undo: FailureHandlingKind = 'undo';
+}
+
+```
+
 #### TextDocumentIdentifier
 テキストドキュメントは URI で識別される。プロトコル上では URI は文字列として渡される。対応する JSON 構造は次のようになる:
 
