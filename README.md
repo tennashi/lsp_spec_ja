@@ -1341,6 +1341,19 @@ export interface WorkDoneProgressOptions {
 * `code` が `RequestCancelled` であるとき: クライアントは提供された結果を使うかは自由であるが、リクエストがキャンセルされたか未完了であるかは明確にするべきである。
 * その他の場合は部分的な結果を使用するべきではない。
 
+### PartialResultParams
+部分的な結果のトークンを渡すために使われるパラメータリテラル。
+
+```ts
+export interface PartialResultParams {
+	/**
+	 * サーバがクライアントへ部分的な結果(例えばストリーミング)を報告するために使
+	 * 用できるオプションのトークン。
+	 */
+	partialResultToken?: ProgressToken;
+}
+```
+
 ### Actual Protocol
 このセクションは実際の LSP のドキュメントである。次のフォーマットに従う:
 
