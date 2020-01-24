@@ -88,10 +88,10 @@ interface RequestMessage extends Message {
 ```
 
 #### Response Message
-レスポンスメッセージはリクエストの結果として送信される。リクエストが結果を提供
-しない場合でもリクエスト受信者は JSON RPC 仕様に従うためにレスポンスメッセージ
-を返す必要がある。この場合、`ResponseMessage` の `result` プロパティはリクエス
-トの成功を伝えるために `null` を入れるべきである。
+`ResponseMessage` はリクエストの結果として送信される。リクエストが結果となる値
+を提供しない場合でもリクエスト受信者は JSON RPC 仕様に従うためにレスポンスメッ
+セージを返さなければならない。この場合、`ResponseMessage` の `result` プロパティ
+はリクエストの成功を伝えるために `null` を入れるべきである。
 
 ```ts
 interface ResponseMessage extends Message {
@@ -102,32 +102,32 @@ interface ResponseMessage extends Message {
 
 	/**
 	 * リクエストの結果。成功時は必須である。
-	 * メソッドがエラーを返した場合は空でなければならない。
+	 * メソッドがエラーを返した場合はこのプロパティは存在してはならない。
 	 */
 	result?: string | number | boolean | object | null;
 
 	/**
 	 * リクエストが失敗した場合のエラー。
 	 */
-	error?: ResponseError<any>;
+	error?: ResponseError;
 }
 
-interface ResponseError<D> {
+interface ResponseError {
 	/**
 	 * 発生したエラー種別を表す数字。
 	 */
 	code: number;
 
 	/**
-	 * エラーの概要。
+	 * エラーの概要を表す文字列。
 	 */
 	message: string;
 
 	/**
-	 * エラーについての情報を不可するプリミティブまたは構造化された値。
+	 * エラーについての情報を付加するプリミティブまたは構造化された値。
 	 * 省略可能。
 	 */
-	data?: D;
+	data?: string | number | boolean | array | object | null;
 }
 
 export namespace ErrorCodes {
