@@ -815,7 +815,8 @@ export namespace FailureHandlingKind {
 ```
 
 #### TextDocumentIdentifier
-テキストドキュメントは URI で識別される。プロトコル上では URI は文字列として渡される。対応する JSON 構造は次のようになる:
+テキストドキュメントは URI で識別される。プロトコルレベルでは URI は文字列とし
+て渡される。対応する JSON 構造は次のようになる:
 
 ```ts
 interface TextDocumentIdentifier {
