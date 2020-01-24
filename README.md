@@ -873,6 +873,8 @@ interface TextDocumentItem {
 | Diff | `diff` |
 | Dart | `dart` |
 | Dockerfile | `dockerfile` |
+| Elixir | `elixir` |
+| Erlang | `erlang` |
 | F# | `fsharp` |
 | Git | `git-commit` and `git-rebase` |
 | Go | `go` |
