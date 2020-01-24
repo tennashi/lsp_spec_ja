@@ -1097,6 +1097,207 @@ export interface MarkupContent {
 }
 ```
 
+### Work Done Progress
+バージョン 3.15.0 から
+
+作業進行状況は一般的な `$/progress` 通知を用いて報告される。作業進行状況通知の
+ペイロードは3つの異なる形式を持つ。
+
+#### Work Done Progress Begin
+進行状況の報告を開始するには、次のペイロードを含む `$/progress` 通知を送らなけ
+ればならない。
+
+```ts
+export interface WorkDoneProgressBegin {
+
+	kind: 'begin';
+
+	/**
+   * 進行状況の必須のタイトル。行われた操作種別を簡潔に伝えるために使われる。
+	 *
+	 * 例えば: "Indexing" または "Linking dependencies"。
+	 */
+	title: string;
+
+	/**
+	 * ユーザが時間のかかる操作をキャンセルできるようにするためにキャンセルボタン
+	 * を表示すべきかどうかを制御する。キャンセルをサポートしていないクライアント
+	 * はこの設定を無視できる。
+	 */
+	cancellable?: boolean;
+
+	/**
+	 * オプション、進行状況の詳細。`title` の捕捉的な情報を含む。
+	 *
+	 * 例: "3/25 files", "project/src/module2", "node_modules/some_dep"
+	 * セットされてない場合、以前のメッセージ(存在する場合)は有効のままである。
+	 */
+	message?: string;
+
+	/**
+	 * 画面に表示するオプションの進捗率(100は100%と考える)。与えられない場合は無
+	 * 限の進捗率が仮定され、クライアントは後続のレポート通知の `percentage` 値を
+	 * 無視できる。
+	 *
+	 * この値は単調に増加すべきである。クライアントはこのルールに従っていない値を
+	 * 無視してもよい。
+	 */
+	percentage?: number;
+}
+
+```
+
+#### Work Done Progress Report
+作業進行状況を報告するには次のペイロードを用いる:
+
+```ts
+export interface WorkDoneProgressReport {
+
+	kind: 'report';
+
+	/**
+	 * キャンセルボタンの有効無効を制御する。このプロパティは `WorkDoneProgressStart` ペイロードでキャンセルボタンが要求された場合のみ有効である。
+	 *
+	 * キャンセルをサポートしていない、またはボタンの有効無効の制御をサポートして
+	 * いないクライアントはこの設定を無視できる。
+	 */
+	cancellable?: boolean;
+
+	/**
+	 * オプション、進行状況の詳細。`title` の捕捉的な情報を含む。
+	 *
+	 * 例: "3/25 files", "project/src/module2", "node_modules/some_dep"
+	 * セットされてない場合、以前のメッセージ(存在する場合)は有効のままである。
+	 */
+	message?: string;
+
+	/**
+	 * 画面に表示するオプションの進捗率(100は100%と考える)。与えられない場合は無
+	 * 限の進捗率が仮定され、クライアントは後続のレポート通知の `percentage` 値を
+	 * 無視できる。
+	 *
+	 * この値は単調に増加すべきである。クライアントはこのルールに従っていない値を
+	 * 無視してもよい。
+	 */
+	percentage?: number;
+}
+```
+
+#### Work Done Progress End
+作業進行状況の報告を終了するには次のペイロードを用いる:
+
+```ts
+export interface WorkDoneProgressEnd {
+
+	kind: 'end';
+
+	/**
+	 * オプション、操作の結果を示すなどの最後のメッセージを指す。
+	 */
+	message?: string;
+}
+
+```
+
+#### Initating Work Done Progress
+作業進行状況は二つの異なる方法で始められる:
+
+1. リクエストパラメータで事前に定義された `workDoneToken` プロパティを用いてリクエスト送信者(大抵はクライアント)によって開始される。
+2. `window/workDoneProgress/create` リクエストを用いてサーバによって開始される。
+
+クライアントが `textDocument/reference` リクエストをサーバニ送信し、クライアントはリクエストで作業進行状況の報告を許可した場合を考える。サーバにそれを伝えるために、クライアントは `textDocument/reference` リクエストパラメータに `workDoneToken` プロパティを追加する。このようにである:
+
+```json
+{
+	"textDocument": {
+		"uri": "file:///folder/file.ts"
+	},
+	"position": {
+		"line": 9,
+		"character": 5
+	},
+	"context": {
+		"includeDeclaration": true
+	},
+	// 作業進行状況の報告に使われるトークン。
+	"workDoneToken": "1d546990-40a3-4b77-b134-46622995f6ae"
+}
+```
+
+サーバは `workDoneToken` を用いて指定された `textDocument/reference` の進行状況を報告する。そのための `$/progress` 通知パラメータはこのようになる:
+
+```json
+{
+	"token": "1d546990-40a3-4b77-b134-46622995f6ae",
+	"value": {
+		"kind": "begin",
+		"title": "Finding references for A#foo",
+		"cancellable": false,
+		"message": "Processing file X.ts",
+		"percentage": 0
+	}
+}
+```
+
+サーバが開始した作業の進行状況も同じように機能する。唯一の違いはサーバが
+`window/workDoneProgress/create` リクエストを用いて進行状況を示す UI をリクエス
+トし、その後の `report` で使われるトークンを提供することである。
+
+#### Signaling Work Done Progress Reporting
+プロトコルの後方互換性を担保するために、サーバはクライアントが次で定義される
+`window.workDoneProgress` 機能を提供する場合のみ、作業進行状況の報告が許可され
+ている。
+
+```ts
+	/**
+	 * Window specific client capabilities.
+	 */
+	window?: {
+		/**
+		 * クライアントが `$/progress` 通知の処理をサポートするかどうか。
+		 */
+		workDoneProgress?: boolean;
+	}
+```
+
+クライアントがリクエストを送信する前にクライアントが進行状況を表示する UI を準
+備することを避けるために、サーバが実際に進行状況を報告しない場合、サーバは対応
+するサーバ機能 `workDoneProgress` を伝えなければならない。上記の
+`textDocument/reference` の例ではサーバ機能の `referenceProvide` プロパティを次
+のように設定することでサポートすることを通知する。
+
+```json
+{
+	"referencesProvider": {
+		"workDoneProgress": true
+	}
+}
+
+```
+
+### WorkDoneProgressParams
+プログレストークンを渡すために使われるパラメータリテラル。
+
+```ts
+export interface WorkDoneProgressParams {
+	/**
+	 * 作業進行状況を報告するために使われるオプションのトークン。
+	 */
+	workDoneToken?: ProgressToken;
+}
+
+```
+
+### WorkDoneProgressOptions
+サーバ機能で進行状況報告のサポートを伝えるためのオプション。
+
+```ts
+export interface WorkDoneProgressOptions {
+	workDoneProgress?: boolean;
+}
+
+```
+
 ### Actual Protocol
 このセクションは実際の LSP のドキュメントである。次のフォーマットに従う:
 
