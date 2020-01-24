@@ -18,8 +18,8 @@
 
 | ヘッダフィールド名 | 値の型 | 備考 |
 | ------------------ | ------ | ---- |
-| Content-Length | number | コンテント部のバイト数。このヘッダは必須 |
-| Content-Type | string | コンテント部の mime type。デフォルトは `application/vscode-jsonrpc; charset=utf-8` |
+| Content-Length | number | コンテント部のバイト数。このヘッダは必須。 |
+| Content-Type | string | コンテント部の mime type。デフォルトは `application/vscode-jsonrpc; charset=utf-8` である。 |
 
 ヘッダ部は 'ascii' でエンコードされる。これはヘッダ部とコンテント部を分割する
 `\r\n` も含む。
