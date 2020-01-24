@@ -1,5 +1,5 @@
-# Language Server Protocol Specification - 3.14
-以下の文書は [Language Server Protocol Specification - 3.14](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/) の日本語訳である。
+# Language Server Protocol Specification - 3.15
+以下の文書は [Language Server Protocol Specification - 3.15](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/) の日本語訳である。
 
 <a rel="license" href="http://creativecommons.org/licenses/by/3.0/"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="https://i.creativecommons.org/l/by/3.0/88x31.png" /></a>
 
