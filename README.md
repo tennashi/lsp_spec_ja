@@ -176,11 +176,11 @@ interface NotificationMessage extends Message {
 `MethodNotFound`(`-32601`) でリクエストをエラーにしなければならない。
 
 #### Cancellation Support
-ベースプロトコルはリクエストのキャンセル機能を提供する。リクエストをキャンセルするためには、次のプロパティを通知メッセージとして送信する:
+ベースプロトコルはリクエストのキャンセル機能を提供する。リクエストをキャンセルするには、次のプロパティを通知メッセージとして送信する:
 
-*通知*:
+*通知:*
 * メソッド: `$/cancelRequest`
-* パラメータ: 以下で定義される `CancelParams`:
+* パラメータ: 次で定義される `CancelParams`:
 
 ```ts
 interface CancelParams {
