@@ -2278,19 +2278,19 @@ export interface WorkspaceFolder {
 バージョン 3.6.0 から
 
 `workspace/didChangeWorkspaceFolders` 通知はワークスペース設定が変更されたこと
-をサーバに通知するためにクライアントから送信される。
-`ServerCapabilities/workspace/workspaceFolders` と
-`ClientCapablitiies/workspace/workspaceFolders` が双方 `true` の場合、またはサー
-バ自身がこの通知の受けることを登録した場合、通知はデフォルトで送信される。
+をサーバに通知するためにクライアントから送信される。クライアント機能の
+`workspace.workspaceFolders` とサーバ機能の
+`workspace.workspaceFolders.supported` が双方 `true` の場合、またはサーバ自身が
+この通知の受けることを登録した場合、通知はデフォルトで送信される。
 `workspace/didChangeWorkspaceFolders` を登録するためにサーバからクライアントへ
 `client/registerCapability` リクエストを送る。登録パラメータは次の形式の
 `registrations` アイテムを持つ必要がある。`id` は機能の登録解除に使われるユニー
 ク ID である(例では UUID を使用する):
 
-```ts
+```json
 {
-	id: "28c6150c-bd7b-11e7-abc4-cec278b6b50a",
-	method: "workspace/didChangeWorkspaceFolders"
+	"id": "28c6150c-bd7b-11e7-abc4-cec278b6b50a",
+	"method": "workspace/didChangeWorkspaceFolders"
 }
 ```
 
