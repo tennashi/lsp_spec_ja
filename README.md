@@ -2776,20 +2776,27 @@ export interface TextDocumentSyncOptions {
 ```
 
 #### DidOpenTextDocument Notification
-ドキュメントオープン通知は新しいテキストドキュメントを開いたことを知らせるため
-にクライアントからサーバへ送信される。ドキュメントの実体はクライアントに管理さ
-れ、サーバはドキュメントの URI から実体を読もうとしてはならない。この意味で
-`open` はクライアントによって管理されることを意味する。中身がエディタで表示され
-ることを必ずしも表わさない。オープン通知は対応するクローズ通知を送信する前に再
-度送信してはならない。これはオープンとクローズ通知は同数でなければならず、特定
-のテキストドキュメントを開いている数は最大で1でなかればならないことを意味する。
-サーバがリクエストを満たす能力はテキストドキュメントが開いているか閉じているか
-に依らないことを注意する。
+`textDocument/didOpen` 通知は新しいテキストドキュメントを開いたことを知らせるた
+めにクライアントからサーバへ送信される。ドキュメントの実体はクライアントに管理
+され、サーバはドキュメントの URI から実体を読もうとしてはならない。この意味でド
+キュメントを開くことはクライアントによって管理されることを意味する。中身がエディ
+タで表示されることを必ずしも表わさない。`textDocument/didOpen` 通知は対応する
+`textDocument/didClose` 通知を送信する前に再度送信してはならない。これは
+`textDocument/didOpen` と `textDocument/didClose` 通知は同数でなければならず、
+特定のテキストドキュメントを開いている数は最大で1でなかればならないことを意味す
+る。サーバがリクエストを満たす能力はテキストドキュメントが開いているか閉じてい
+るかに依らないことを注意する。
 
 `DidOpenTextDocumentParams` はドキュメントが関連する言語識別子を含む。ドキュメ
 ントの言語識別子が変更された場合、クライアントは `textDocument/didClose` をサー
 バに送信し、その後新たな言語識別子をサーバが処理できる場合は新しい言語識別子を
 `textDocument/didOpen` で送信する必要がある。
+
+*クライアント機能:* 一般的な同期[クライアント機能](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#textDocument_synchronization_cc)
+
+*サーバ機能:* 一般的な同期[サーバ機能](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#textDocument_synchronization_sc)
+
+*登録オプション:* `TextDocumentRegisterationOptions`
 
 *通知:*
 * メソッド: `textDocument/didOpen`
@@ -2803,8 +2810,6 @@ interface DidOpenTextDocumentParams {
 	textDocument: TextDocumentItem;
 }
 ```
-
-*登録オプション:* `TextDocumentRegisterationOptions`
 
 #### DidChangeTextDocument Notification
 ドキュメント変更通知はテキストドキュメントへの変更を伝えるためにクライアントか
