@@ -2673,6 +2673,13 @@ export interface ExecuteCommandParams extends WorkDoneProgressParams {
 `workspace/applyEdit` リクエストはクライアント側のリソースを変更するためにサー
 バからクライアントに送信される。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `workspace.applyEdit`
+* プロパティタイプ: `boolean`
+
+ワークスペース編集でサポートされる機能は `WorkspaceEditClientCapabilities` も参
+照。
+
 *リクエスト:*
 * メソッド: `workspace/applyEdit`
 * パラメータ: 次で定義される `ApplyWorkspaceEditPrams`:
@@ -2693,7 +2700,7 @@ export interface ApplyWorkspaceEditParams {
 ```
 
 *レスポンス:*
-* 結果: 次のように定義される `ApplyWorkspaceEditResponse`:
+* 結果: 次で定義される `ApplyWorkspaceEditResponse`:
 
 ```ts
 export interface ApplyWorkspaceEditResponse {
