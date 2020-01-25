@@ -2025,18 +2025,16 @@ interface MessageActionItem {
 ```ts
 interface LogMessageParams {
 	/**
-	 * The message type. See {@link MessageType}
+	 * メッセージ種別。{@link MessageType} を参照。
 	 */
 	type: number;
 
 	/**
-	 * The actual message
+	 * 実際のメッセージ。
 	 */
 	message: string;
 }
 ```
-
-`type` は上記で定義した。
 
 #### Telemetry Notification
 `telemetry/event` 通知はクライアントにテレメトリのログ保存を要求するためにサー
