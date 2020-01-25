@@ -2036,6 +2036,27 @@ interface LogMessageParams {
 }
 ```
 
+#### Creating Work Done Progress
+`window/workDoneProgress/create` リクエストはクライアントに作業進行状況を作成さ
+せるためにサーバからクライアントに送信される。
+
+*リクエスト:*
+* メソッド: `window/workDoneProgress/create`
+* パラメータ: 次で定義される `WorkDoneProgresCreateParams`:
+
+```ts
+export interface WorkDoneProgressCreateParams {
+	/**
+	 * 進行状況報告に使われるトークン。
+	 */
+	token: ProgressToken;
+}
+```
+
+*レスポンス:*
+* 結果: 空
+* エラー: エラーコードと `window/workDoneProgress/create` リクエスト中に発生した例外がセットされたメッセージ。エラーが発生した場合、サーバは `WorkDoneProgressCreateParams` で受け取ったトークンに対してどのような進行状況通知も送信してはならない。
+
 #### Telemetry Notification
 `telemetry/event` 通知はクライアントにテレメトリのログ保存を要求するためにサー
 バからクライアントに送信される。
