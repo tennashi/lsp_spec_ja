@@ -1365,14 +1365,14 @@ export interface PartialResultParams {
 * *登録オプション* セクションはリクエストまたは通知が動的な機能登録をサポートする場合の登録オプションを記述する。
 
 #### Request, Notification and Response ordering
-リクエストのレスポンスはだいたいサーバまたはクライアント側にリクエストが届いた
-順番に送信されるべきである。例えばサーバが `textDocument/completion` リクエスト
-を受けてから `textDocument/signatureHelp` を受けた場合、たいてい
+リクエストへのレスポンスはおおよそリクエストがサーバまたはクライアント側に届い
+た順番に送信されるべきである。例えばサーバが `textDocument/completion` リクエス
+トを受けてから `textDocument/signatureHelp` を受信した場合、大抵まずは
 `textDocument/completion` のレスポンスから返され、その後
 `textDocument/signatureHelp` のレスポンスが返される。
 
-ただし、サーバは並列実行するかもしれないし、リクエストを受けた順と異なる順でレ
-スポンスを返したいかもしれない。サーバはレスポンスの正確さに影響しない限りこの
+ただし、サーバは並列実行する可能性があり、リクエストを受けた順と異なる順でレス
+ポンスを返したい可能性もある。サーバはレスポンスの正確さに影響しない限り、この
 ような順序変更を行うことができる。例えば `textDocument` と
 `textDocument/signatureHelp` は大抵出力順序が影響しないため、順序交換は可能であ
 る。一方 `textDocument/definition` と `textDocument/rename` は後者の実行が前者
