@@ -2224,6 +2224,32 @@ VS Code のマルチルートや Atom のプロジェクトフォルダ Sublime 
 ルしか開いていない場合 `null` が返される。ワークスペースは開かれているがフォル
 ダが設定されていない場合は空配列が返される。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `workdpace.workspaceFolders`
+* プロパティタイプ: `boolean`
+
+*サーバ機能:*
+* プロパティパス(省略可能): `workdpace.workspaceFolders`
+* プロパティタイプ: 次で定義される `WorkspaceFoldersServerCapabilities`:
+
+```ts
+export interface WorkspaceFoldersServerCapabilities {
+	/**
+	 * サーバがワークスペースフォルダをサポートするかどうか。
+	 */
+	supported?: boolean;
+
+	/**
+	 * サーバが `workspace/didChangeWorkspaceFolders` 通知を受信するかどうか。
+	 *
+	 * 文字列が与えられた場合、その文字列はクライアント側で登録された通知の ID と
+	 * して扱われる。ID は `client/unregisterCapability` リクエストによる登録解除
+	 * に使うことができる。
+	 */
+	changeNotifications?: string | boolean;
+}
+```
+
 *リクエスト:*
 * メソッド: `workspace/workspaceFolders`
 * パラメータ: なし
