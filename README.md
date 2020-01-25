@@ -1983,6 +1983,37 @@ export namespace MessageType {
 * 結果: 選択された `MessageActionItem` または選択されていない場合は `null`
 * エラー: エラーコードと `window/showMessageRequest` リクエスト中に発生した例外がセットされたメッセージ。
 
+```ts
+interface ShowMessageRequestParams {
+	/**
+	 * メッセージ種別。{@link MessageType} を参照。
+	 */
+	type: number;
+
+	/**
+	 * 実際のメッセージ。
+	 */
+	message: string;
+
+	/**
+	 * 表示するためのメッセージアクション。
+	 */
+	actions?: MessageActionItem[];
+}
+```
+
+`MessageActionItem` は次のように定義される。
+
+```ts
+interface MessageActionItem {
+	/**
+	 * 'Retry'、'Open Log' などのような短いタイトル。
+	 */
+	title: string;
+}
+
+```
+
 #### LogMessage Notification
 `window/logMessage` 通知はクライアントに特定のメッセージをログに残す要求をする
 ためにサーバからクライアントに送信される。
