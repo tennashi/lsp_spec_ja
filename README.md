@@ -1394,14 +1394,13 @@ Emacs のようなツール)によって管理されるように定義してい�
 サーバが `initialize` リクエストに `InitializeResult` で応答するまで、クライア
 ントはサーバに追加のリクエスト及び通知を送信してはならない。加えて、サーバは
 `InitializeResult` を応答するまでリクエストまたは通知をクライアントに送信しては
-ならない、例外として `initilize` リクエストの処理中はサーバは
-`window/showMessage`、`window/logMessage` と `telemetry/event` 通知や
+ならない、例外として `initilize` リクエストの処理中、サーバは
+`window/showMessage`、`window/logMessage`、`telemetry/event` 通知や
 `window/showMessageRequest` リクエストをクライアントに送信することができる。
 
 `initialize` リクエストは一度だけ送信される。
 
 *リクエスト:*
-
 * メソッド: `initialize`
 * パラメータ: 次のように定義される `InitializedParams`:
 
@@ -1414,6 +1413,23 @@ interface InitializeParams {
 	 * (`exit` 通知を参照)。
 	 */
 	processId: number | null;
+
+	/**
+	 * クライアントについての情報
+	 *
+	 * @since 3.15.0
+	 */
+	clientInfo?: {
+		/**
+		 * クライアント自身により定義されたクライアントの名前。
+		 */
+		name: string;
+
+		/**
+		 * クライアント自身により定義されたクライアントのバージョン。
+		 */
+		version?: string;
+	};
 
 	/**
    * ワークスペースの `rootPath`。フォルダを開いていない場合は null となる。
@@ -1456,169 +1472,7 @@ interface InitializeParams {
 }
 ```
 
-`ClientCapabilities`、`TextDocumentClientCapabilities` と `WorkspaceClientCapabilities` は次のように定義される:
-
-
-##### `WorkspaceClientCapabilities` define capabilities the editor / tool provides on the workspace:
-バージョン 3.13 から追加: `ResourceOperationKind`、`FaulureHandlingKind`、クライアントの機能である `workspace.workspaceEdit.resourceOperations`、`workspace.workspaceEdit.failureHandling`
-
-```ts
-/**
- * クライアントがサポートするリソース操作種別。
- */
-export type ResourceOperationKind = 'create' | 'rename' | 'delete';
-
-export namespace ResourceOperationKind {
-
-	/**
-	 * 新規ファイルやフォルダを作成することをサポートする。
-	 */
-	export const Create: ResourceOperationKind = 'create';
-
-	/**
-	 * 既存ファイルやフォルダをリネームすることをサポートする。
-	 */
-	export const Rename: ResourceOperationKind = 'rename';
-
-	/**
-	 * 既存ファイルやフォルダを削除することをサポートする。
-	 */
-	export const Delete: ResourceOperationKind = 'delete';
-}
-
-export type FailureHandlingKind = 'abort' | 'transactional' | 'undo' | 'textOnlyTransactional';
-
-export namespace FailureHandlingKind {
-
-	/**
-	 * ワークスペースへの変更を適用する際、一つでも変更が失敗した場合単純に破棄さ
-	 * れる。失敗した操作の前に実行された操作は実行されたままである。
-	 */
-	export const Abort: FailureHandlingKind = 'abort';
-
-	/**
-	 * 全ての操作はトランザクショナルに実行される。つまり、ワークスペースには全て
-	 * 成功するか全て変更しないかのどちらかのみが適用される。
-	 */
-	export const Transactional: FailureHandlingKind = 'transactional';
-
-
-	/**
-   * テキストファイルへの変更のみからなるワークスペースの編集はランザクショナル
-   * に実行される。変更に含まれるリソースへの変更(ファイルの作成、リネーム、削
-   * 除)には `abort` が適用される。
-	 */
-	export const TextOnlyTransactional: FailureHandlingKind = 'textOnlyTransactional';
-
-	/**
-	 * クライアントはすでに実行した操作を undo しようとする。しかし、その実行が成
-	 *  功することは保証されない。
-	 */
-	export const Undo: FailureHandlingKind = 'undo';
-}
-
-/**
- * ワークスペース固有のクライアントの機能。
- */
-export interface WorkspaceClientCapabilities {
-	/**
-	 * クライアントは `workspace/applyEdit` リクエストをサポートすることにより、
-	 * ワークスペースへのバッチ編集をサポートする。
-	 */
-	applyEdit?: boolean;
-
-	/**
-	 * `WorkspaceEdit` 固有の機能
-	 */
-	workspaceEdit?: {
-		/**
-		 * クライアントは `WorkspaceEdit` でバージョン管理されたドキュメントの変更をサポートする。
-		 */
-		documentChanges?: boolean;
-
-		/**
-		 * クライアントがサポートするリソース操作。クライアントは少なくともファイル
-		 * とフォルダへの 'create'、'rename'、'delete' をサポートすべきである。
-		 */
-		resourceOperations?: ResourceOperationKind[];
-
-		/**
-		 * ワークスペースへの編集が失敗した場合のクライアントの処理方法。
-		 */
-		failureHandling?: FailureHandlingKind;
-	};
-
-	/**
-	 * `workspace/didChangeConfiguration` 通知固有の機能。
-	 */
-	didChangeConfiguration?: {
-		/**
-		 * 設定変更通知の動的な登録をサポートする。
-		 */
-		dynamicRegistration?: boolean;
-	};
-
-	/**
-	 * `workspace/didChangeWatchedFiles` 通知固有の機能。
-	 */
-	didChangeWatchedFiles?: {
-		/**
-		 * ファイル変更監視通知が動的な登録をサポートする。現在のプロトコルではサー
-		 * バ側からファイル変更の静的な設定はサポートされていないことに注意する。
-		 */
-		dynamicRegistration?: boolean;
-	};
-
-	/**
-	 * `workspace/symbol` リクエスト固有の機能.
-	 */
-	symbol?: {
-		/**
-		 * シンボルリクエストの動的な登録をサポートする
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * `workspace/symbol` リクエスト内の `SymbolKind` 固有の機能。
-		 */
-		symbolKind?: {
-			/**
-			 * クライアントがサポートするシンボル種別の値。このプロパティが存在する場
-			 * 合、クライアントは範囲外の値を適切に処理し、不明な場合はデフォルト値に
-			 * フォールバックすることも保証する。
-			 *
-			 * このプロパティが与えられていない場合、クライアントは LSP の初期バージョ
-			 * ンで定義されていた `File` から `Array` までのみをサポートする。
-			 */
-			valueSet?: SymbolKind[];
-		}
-	};
-
-	/**
-	 * `workspace/executeCommand` リクエスト固有の機能。
-	 */
-	executeCommand?: {
-		/**
-		 * コマンド実行機能の動的な登録をサポートする。
-		 */
-		dynamicRegistration?: boolean;
-	};
-
-	/**
-	 * クライアントがワークスペースフォルダのサポートをする。
-	 *
-	 * 3.6.0 から
-	 */
-	workspaceFolders?: boolean;
-
-	/**
-	 * `workspace/configuration` リクエストをサポートする。
-	 *
-	 * 3.6.0 から
-	 */
-	configuration?: boolean;
-}
-```
+`ClientCapabilities`、`TextDocumentClientCapabilities` は次のように定義される:
 
 ##### `TextDocumentClientCapabilities` define capabilities the editor / tool provides on text documents.
 
@@ -1628,417 +1482,120 @@ export interface WorkspaceClientCapabilities {
  */
 export interface TextDocumentClientCapabilities {
 
-	synchronization?: {
-		/**
-		 * テキストドキュメント同期機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * クライアントは `will save` 通知の送信をサポートする。
-		 */
-		willSave?: boolean;
-
-		/**
-		 * クライアントは `will save` リクエストの送信をサポートし、保存前にドキュ
-		 * メントに適用するテキスト編集を提供するレスポンスを待つ。
-		 */
-		willSaveWaitUntil?: boolean;
-
-		/**
-		 * クライアントは `did save` 通知をサポートする。
-		 */
-		didSave?: boolean;
-	}
+	synchronization?: TextDocumentSyncClientCapabilities;
 
 	/**
-	 * `textDocument/completion` 固有の機能。
+	 * `textDocument/completion` リクエスト固有の機能。
 	 */
-	completion?: {
-		/**
-		 * 補完機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * クライアントは次の `CompletionItem` 固有の機能をサポートする。
-		 */
-		completionItem?: {
-			/**
-			 * クライアントは挿入テキストとしてスニペットをサポートする。
-			 *
-			 * スニペットはタブ位置とプレースホルダ `$1`、`$2`、`${3:foo}` で定義でき
-			 * る。`$0` は最後のタブ位置を定め、デフォルトでスニペットの最後となる。
-			 * 同じ識別子プレースホルダはリンクしている、つまり一方を入力すると他も更
-			 * 新される。
-			 */
-			snippetSupport?: boolean;
-
-			/**
-			 * クライアントは補完候補上で文字をコミットすることをサポートする。
-			 */
-			commitCharactersSupport?: boolean
-
-			/**
-			 * クライアントはプロパティの文書化に次のコンテントフォーマットをサポート
-			 * する。順序はクライアントで優先されるフォーマットを表わす。
-			 */
-			documentationFormat?: MarkupKind[];
-
-			/**
-			 * クライアントは補完候補の非推奨プロパティをサポートする。
-			 */
-			deprecatedSupport?: boolean;
-
-			/**
-			 * クライアントは補完候補の事前確定をサポートする。
-			 */
-			preselectSupport?: boolean;
-		}
-
-		completionItemKind?: {
-			/**
-			 * クライアントがサポートする補完候補種別。このプロパティが存在する場合、
-			 * クライアントは範囲外の値を適切に処理し、不明な場合はデフォルト値に
-			 * フォールバックすることも保証する。
-			 *
-			 * このプロパティが与えられていない場合、クライアントは LSP の初期バージョ
-			 * ンで定義されていた `Text` から `Reference` までのみをサポートする。*/
-			valueSet?: CompletionItemKind[];
-		},
-
-		/**
-		 * クライアントは `textDocument/completion` リクエストに追加のコンテキスト
-		 * 情報を送信することをサポートする。
-		 * `textDocument/completion` request.
-		 */
-		contextSupport?: boolean;
-	};
+	completion?: CompletionClientCapabilities;
 
 	/**
-	 * `textDocument/hover` 固有の機能。
+	 * `textDocument/hover` リクエスト固有の機能。
 	 */
-	hover?: {
-		/**
-		 * ホバー機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * クライアントはコンテントプロパティに次のコンテントフォーマットをサポート
-		 * する。順序はクライアントでのフォーマットの優先度を表わす。
-		 */
-		contentFormat?: MarkupKind[];
-	};
+	hover?: HoverClientCapabilities;
 
 	/**
-	 * `textDocument/signatureHelp` 固有の機能。
+	 * `textDocument/signatureHelp` リクエスト固有の機能。
 	 */
-	signatureHelp?: {
-		/**
-		 * シグネチャヘルプ機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * クライアントは次の `SignatureInformation` 固有のプロパティをサポートす
-		 * る。
-		 */
-		signatureInformation?: {
-			/**
-			 * クライアントはドキュメントプロパティに次のフォーマットをサポートする。
-			 * 順序はクライアントでのフォーマットの優先度を表わす。
-			 */
-			documentationFormat?: MarkupKind[];
-
-			/**
-			 * パラメータ情報固有のクライアントの機能。
-			 */
-			parameterInformation?: {
-				/**
-				 * クライアントは単純なラベル文字の代わりにラベルオフセットの処理をサ
-				 * ポートする。
-				 *
-				 * 3.14.0 から
-				 */
-				labelOffsetSupport?: boolean;
-			}
-		};
-	};
+	signatureHelp?: SignatureHelpClientCapabilities;
 
 	/**
-	 * `textDocument/references` 固有の機能。
+	 * `textDocument/declaration` リクエスト固有の機能。
+	 *
+	 * @since 3.14.0
 	 */
-	references?: {
-		/**
-		 * リファレンス機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-	};
+	declaration?: DeclarationClientCapabilities;
 
 	/**
-	 * `textDocument/documentHighlight` 固有の機能。
-	 */
-	documentHighlight?: {
-		/**
-		 * ドキュメントハイライト機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-	};
-
-	/**
-	 * `textDocument/documentSymbol` 固有の機能。
-	 */
-	documentSymbol?: {
-		/**
-		 * ドキュメントシンボル機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * `SymbolKind` 固有の機能。
-		 */
-		symbolKind?: {
-			/**
-			 * クライアントがサポートするシンボル種別。このプロパティが存在する場合、
-			 * クライアントは範囲外の値を適切に処理し、不明な場合はデフォルト値に
-			 * フォールバックすることも保証する。
-			 *
-			 * このプロパティが与えられていない場合、クライアントは LSP の初期バージョ
-			 * ンで定義されていた `File` から `Array` までのみをサポートする。
-			 */
-			valueSet?: SymbolKind[];
-		}
-
-		/**
-		 * クライアントは階層的なドキュメントシンボルをサポートする。
-		 */
-		hierarchicalDocumentSymbolSupport?: boolean;
-	};
-
-	/**
-	 * `textDocument/formatting` 固有の機能。
-	 */
-	formatting?: {
-		/**
-		 * フォーマット機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-	};
-
-	/**
-	 * `textDocument/rangeFormatting` 固有の機能。
-	 */
-	rangeFormatting?: {
-		/**
-		 * 範囲フォーマット機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-	};
-
-	/**
-	 * `textDocument/onTypeFormatting` 固有の機能。
-	 */
-	onTypeFormatting?: {
-		/**
-		 * 入力中フォーマット機能の動的な登録をサポートするかどうか。
-		 */
-		dynamicRegistration?: boolean;
-	};
-
-	/**
-		* `textDocument/declaration` 固有の機能。
-		*/
-	declaration?: {
-		/**
-		 * 宣言元参照機能の動的な登録をサポートするかどうか。`true` がセットされた
-		 * 場合、クライアントは対応するサーバ機能の
-		 * `(TextDocumentRegistrationOptions & StaticRegistrationOptions)` の返り値
-		 * もサポートする。
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * クライアントは宣言リンク形式の追加メタデータをサポートする。
-		 *
-		 * 3.14.0 から
-		 */
-		linkSupport?: boolean;
-	};
-
-	/**
-	 * Capabilities specific to the `textDocument/definition`.
+	 * `textDocument/definition` リクエスト固有の機能。
 	 *
 	 * Since 3.14.0
 	 */
-	definition?: {
-		/**
-		 * Whether definition supports dynamic registration.
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * The client supports additional metadata in the form of definition links.
-		 */
-		linkSupport?: boolean;
-	};
+	definition?: DefinitionClientCapabilities;
 
 	/**
-	 * Capabilities specific to the `textDocument/typeDefinition`
+	 * `textDocument/typeDefinition` リクエスト固有の機能。
 	 *
-	 * Since 3.6.0
+	 * @since 3.6.0
 	 */
-	typeDefinition?: {
-		/**
-		 * Whether typeDefinition supports dynamic registration. If this is set to `true`
-		 * the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-		 * return value for the corresponding server capability as well.
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * The client supports additional metadata in the form of definition links.
-		 *
-		 * Since 3.14.0
-		 */
-		linkSupport?: boolean;
-	};
+	typeDefinition?: TypeDefinitionClientCapabilities;
 
 	/**
-	 * Capabilities specific to the `textDocument/implementation`.
+	 * `textDocument/implementation` リクエスト固有の機能。
 	 *
-	 * Since 3.6.0
+	 * @since 3.6.0
 	 */
-	implementation?: {
-		/**
-		 * Whether implementation supports dynamic registration. If this is set to `true`
-		 * the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-		 * return value for the corresponding server capability as well.
-		 */
-		dynamicRegistration?: boolean;
-
-		/**
-		 * The client supports additional metadata in the form of definition links.
-		 *
-		 * Since 3.14.0
-		 */
-		linkSupport?: boolean;
-	};
+	implementation?: ImplementationClientCapabilities;
 
 	/**
-	 * Capabilities specific to the `textDocument/codeAction`
+	 * `textDocument/references` リクエスト固有の機能。
 	 */
-	codeAction?: {
-		/**
-		 * Whether code action supports dynamic registration.
-		 */
-		dynamicRegistration?: boolean;
-		/**
-		 * The client support code action literals as a valid
-		 * response of the `textDocument/codeAction` request.
-		 *
-		 * Since 3.8.0
-		 */
-		codeActionLiteralSupport?: {
-			/**
-			 * The code action kind is support with the following value
-			 * set.
-			 */
-			codeActionKind: {
-
-				/**
-				 * The code action kind values the client supports. When this
-				 * property exists the client also guarantees that it will
-				 * handle values outside its set gracefully and falls back
-				 * to a default value when unknown.
-				 */
-				valueSet: CodeActionKind[];
-			};
-		};
-	};
+	references?: ReferenceClientCapabilities;
 
 	/**
-	 * Capabilities specific to the `textDocument/codeLens`
+	 * `textDocument/documentHighlight` リクエスト固有の機能。
 	 */
-	codeLens?: {
-		/**
-		 * Whether code lens supports dynamic registration.
-		 */
-		dynamicRegistration?: boolean;
-	};
+	documentHighlight?: DocumentSymbolClientCapabilities;
 
 	/**
-	 * Capabilities specific to the `textDocument/documentLink`
+	 * `textDocument/documentSymbol` リクエスト固有の機能。
 	 */
-	documentLink?: {
-		/**
-		 * Whether document link supports dynamic registration.
-		 */
-		dynamicRegistration?: boolean;
-	};
+	documentSymbol?: DocumentSymbolClientCapabilities;
 
 	/**
-	 * Capabilities specific to the `textDocument/documentColor` and the
-	 * `textDocument/colorPresentation` request.
+	 * `textDocument/codeAction` リクエスト固有の機能。
+	 */
+	codeAction?: CodeActionClientCapabilities;
+
+	/**
+	 * `textDocument/codeLens` リクエスト固有の機能。
+	 */
+	codeLens?: CodeLensClientCapabilities;
+
+	/**
+	 * `textDocument/documentLink` リクエスト固有の機能。
+	 */
+	documentLink?: DocumentLinkClientCapabilities;
+
+	/**
+	 * `textDocument/documentColor` と `textDocument/colorPresentation` リクエス
+	 * ト固有の機能。
 	 *
-	 * Since 3.6.0
+	 * @since 3.6.0
 	 */
-	colorProvider?: {
-		/**
-		 * Whether colorProvider supports dynamic registration. If this is set to `true`
-		 * the client supports the new `(ColorProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-		 * return value for the corresponding server capability as well.
-		 */
-		dynamicRegistration?: boolean;
-	}
+	colorProvider?: DocumentColorClientCapabilities;
 
 	/**
-	 * Capabilities specific to the `textDocument/rename`
+	 * `textDocument/formatting` リクエスト固有の機能。
 	 */
-	rename?: {
-		/**
-		 * Whether rename supports dynamic registration.
-		 */
-		dynamicRegistration?: boolean;
-		/**
-		 * The client supports testing for validity of rename operations
-		 * before execution.
-		 */
-		prepareSupport?: boolean;
-	};
+	formatting?: DocumentFormattingClientCapabilities;
 
 	/**
-	 * Capabilities specific to `textDocument/publishDiagnostics`.
+	 * `textDocument/rangeFormatting` リクエスト固有の機能。
 	 */
-	publishDiagnostics?: {
-		/**
-		 * Whether the clients accepts diagnostics with related information.
-		 */
-		relatedInformation?: boolean;
-	};
+	rangeFormatting?: DocumentRangeFormattingClientCapabilities;
+
 	/**
-	 * Capabilities specific to `textDocument/foldingRange` requests.
+	 * `textDocument/onTypeFormatting` リクエスト固有の機能。
+	 */
+	onTypeFormatting?: DocumentOnTypeFormattingClientCapabilities;
+
+	/**
+	 * `textDocument/rename` リクエスト固有の機能。
+	 */
+	rename?: RenameClientCapabilities;
+
+	/**
+	 * `textDocument/publishDiagnostics` 通知固有の機能。
+	 */
+	publishDiagnostics?: PublishDiabnosticsClientCapabilities;
+
+	/**
+	 * `textDocument/foldingRange` リクエスト固有の機能。
 	 *
-	 * Since 3.10.0
+	 * @since 3.10.0
 	 */
-	foldingRange?: {
-		/**
-		 * Whether implementation supports dynamic registration for folding range providers. If this is set to `true`
-		 * the client supports the new `(FoldingRangeProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-		 * return value for the corresponding server capability as well.
-		 */
-		dynamicRegistration?: boolean;
-		/**
-		 * The maximum number of folding ranges that the client prefers to receive per document. The value serves as a
-		 * hint, servers are free to follow the limit.
-		 */
-		rangeLimit?: number;
-		/**
-		 * If set, the client signals that it only supports folding complete lines. If set, client will
-		 * ignore specified `startCharacter` and `endCharacter` properties in a FoldingRange.
-		 */
-		lineFoldingOnly?: boolean;
-	};
+	foldingRange?: FoldingRangeClientCapabilities;
 }
 ```
 
@@ -2061,17 +1618,48 @@ export interface TextDocumentClientCapabilities {
 ```ts
 interface ClientCapabilities {
 	/**
-	 * Workspace specific client capabilities.
+	 * ワークスペース固有のクライアント機能。
 	 */
-	workspace?: WorkspaceClientCapabilities;
+	workspace?: {
+		/**
+		* クライアントは `workspace/applyEdit` リクエストをサポートすることにより、
+		* ワークスペースへのバッチ編集をサポートする。
+		*/
+		applyEdit?: boolean;
+
+		/**
+		* `WorkspaceEdit` 固有の機能。
+		*/
+		workspaceEdit?: WorkspaceEditClientCapabilities;
+
+		/**
+		* `workspace/didChangeConfiguration` 通知固有の機能。
+		*/
+		didChangeConfiguration?: DidChangeConfigurationClientCapabilities;
+
+		/**
+		* `workspace/didChangeWatchedFiles` 通知固有の機能。
+		*/
+		didChangeWatchedFiles?: DidChangeWatchedFilesClientCapabilities;
+
+		/**
+		* `workspace/symbol` リクエスト固有の機能。
+		*/
+		symbol?: WorkspaceSymbolClientCapabilities;
+
+		/**
+		* `workspace/executeCommand` リクエスト固有の機能。
+		*/
+		executeCommand?: ExecuteCommandClientCapabilities;
+	};
 
 	/**
-	 * Text document specific client capabilities.
+	 * テキストドキュメント固有のクライアント機能。
 	 */
 	textDocument?: TextDocumentClientCapabilities;
 
 	/**
-	 * Experimental client capabilities.
+	 * 実験的なクライアント機能。
 	 */
 	experimental?: any;
 }
@@ -2083,9 +1671,26 @@ interface ClientCapabilities {
 ```ts
 interface InitializeResult {
 	/**
-	 * The capabilities the language server provides.
+	 * サーバが提供する機能。
 	 */
 	capabilities: ServerCapabilities;
+
+	/**
+	 * サーバについての情報。
+	 *
+	 * @since 3.15.0
+	 */
+	serverInfo?: {
+		/**
+		 * サーバ自身により定義されるサーバの名前。
+		 */
+		name: string;
+
+		/**
+		 * サーバ自身により定義されるサーバのバージョン。
+		 */
+		version?: string;
+	};
 }
 ```
 
@@ -2093,13 +1698,13 @@ interface InitializeResult {
 
 ```ts
 /**
- * Known error codes for an `InitializeError`;
+ * `InitializeError` エラーコード。
  */
 export namespace InitializeError {
 	/**
-	 * If the protocol version provided by the client can't be handled by the server.
-	 * @deprecated This initialize error got replaced by client capabilities. There is
-	 * no version handshake in version 3.0x
+	 * クライアントが提供するプロトコルバージョンをサーバが処理できない場合。
+	 * @deprecated この初期化エラーはクライアント機能によって置き換えられた。バー
+	 * ジョン 3.0x ではバージョンハンドシェイクは行われない。
 	 */
 	export const unknownProtocolVersion: number = 1;
 }
@@ -2110,10 +1715,10 @@ export namespace InitializeError {
 ```ts
 interface InitializeError {
 	/**
-	 * Indicates whether the client execute the following retry logic:
-	 * (1) show the message provided by the ResponseError to the user
-	 * (2) user selects retry or cancel
-	 * (3) if user selected retry the initialize method is sent again.
+	 * 次のようなリトライをクライアントが実行するかどうかを示す:
+	 * (1) `ResponseError` で提供されたメッセージをユーザに見せる。
+	 * (2) ユーザはリトライするかキャンセルするかを選択する。
+	 * (3) ユーザがリトライを選択した場合、`initialize` メソッドをもう一度送信する。
 	 */
 	retry: boolean;
 }
@@ -2123,319 +1728,159 @@ interface InitializeError {
 
 ```ts
 /**
- * Defines how the host (editor) should sync document changes to the language server.
- */
-export namespace TextDocumentSyncKind {
-	/**
-	 * Documents should not be synced at all.
-	 */
-	export const None = 0;
-
-	/**
-	 * Documents are synced by always sending the full content
-	 * of the document.
-	 */
-	export const Full = 1;
-
-	/**
-	 * Documents are synced by sending the full content on open.
-	 * After that only incremental updates to the document are
-	 * send.
-	 */
-	export const Incremental = 2;
-}
-
-/**
- * Completion options.
- */
-export interface CompletionOptions {
-	/**
-	 * The server provides support to resolve additional
-	 * information for a completion item.
-	 */
-	resolveProvider?: boolean;
-
-	/**
-	 * The characters that trigger completion automatically.
-	 */
-	triggerCharacters?: string[];
-}
-/**
- * Signature help options.
- */
-export interface SignatureHelpOptions {
-	/**
-	 * The characters that trigger signature help
-	 * automatically.
-	 */
-	triggerCharacters?: string[];
-}
-
-/**
- * Code Action options.
- */
-export interface CodeActionOptions {
-	/**
-	 * CodeActionKinds that this server may return.
-	 *
-	 * The list of kinds may be generic, such as `CodeActionKind.Refactor`, or the server
-	 * may list out every specific kind they provide.
-	 */
-	codeActionKinds?: CodeActionKind[];
-}
-
-/**
- * Code Lens options.
- */
-export interface CodeLensOptions {
-	/**
-	 * Code lens has a resolve provider as well.
-	 */
-	resolveProvider?: boolean;
-}
-
-/**
- * Format document on type options.
- */
-export interface DocumentOnTypeFormattingOptions {
-	/**
-	 * A character on which formatting should be triggered, like `}`.
-	 */
-	firstTriggerCharacter: string;
-
-	/**
-	 * More trigger characters.
-	 */
-	moreTriggerCharacter?: string[];
-}
-
-/**
- * Rename options
- */
-export interface RenameOptions {
-	/**
-	 * Renames should be checked and tested before being executed.
-	 */
-	prepareProvider?: boolean;
-}
-
-/**
- * Document link options.
- */
-export interface DocumentLinkOptions {
-	/**
-	 * Document links have a resolve provider as well.
-	 */
-	resolveProvider?: boolean;
-}
-
-/**
- * Execute command options.
+ * コマンド実行オプション。
  */
 export interface ExecuteCommandOptions {
 	/**
-	 * The commands to be executed on the server
+	 * サーバで実行されるコマンド。
 	 */
 	commands: string[]
 }
 
-/**
- * Save options.
- */
-export interface SaveOptions {
-	/**
-	 * The client is supposed to include the content on save.
-	 */
-	includeText?: boolean;
-}
-
-/**
- * Color provider options.
- */
-export interface ColorProviderOptions {
-}
-
-/**
- * Folding range provider options.
- */
-export interface FoldingRangeProviderOptions {
-}
-
-export interface TextDocumentSyncOptions {
-	/**
-	 * Open and close notifications are sent to the server. If omitted open close notification should not
-	 * be sent.
-	 */
-	openClose?: boolean;
-	/**
-	 * Change notifications are sent to the server. See TextDocumentSyncKind.None, TextDocumentSyncKind.Full
-	 * and TextDocumentSyncKind.Incremental. If omitted it defaults to TextDocumentSyncKind.None.
-	 */
-	change?: number;
-	/**
-	 * If present will save notifications are sent to the server. If omitted the notification should not be
-	 * sent.
-	 */
-	willSave?: boolean;
-	/**
-	 * If present will save wait until requests are sent to the server. If omitted the request should not be
-	 * sent.
-	 */
-	willSaveWaitUntil?: boolean;
-	/**
-	 * If present save notifications are sent to the server. If omitted the notification should not be
-	 * sent.
-	 */
-	save?: SaveOptions;
-}
-
-/**
- * Static registration options to be returned in the initialize request.
- */
-interface StaticRegistrationOptions {
-	/**
-	 * The id used to register the request. The id can be used to deregister
-	 * the request again. See also Registration#id.
-	 */
-	id?: string;
-}
-
 interface ServerCapabilities {
 	/**
-	 * Defines how text documents are synced. Is either a detailed structure defining each notification or
-	 * for backwards compatibility the TextDocumentSyncKind number. If omitted it defaults to `TextDocumentSyncKind.None`.
+	 * どのようにテキストドキュメントが同期されるかを定義する。それぞれの通知を定
+	 * 義する詳細な構造または後方互換性のための `TextDocumentSyncKind` のいずれか
+	 * である。省略した場合はデフォルトで `TextDocumentSyncKind.None` となる。
 	 */
 	textDocumentSync?: TextDocumentSyncOptions | number;
+
 	/**
-	 * The server provides hover support.
-	 */
-	hoverProvider?: boolean;
-	/**
-	 * The server provides completion support.
+	 * サーバが補完機能を提供するかどうか。
 	 */
 	completionProvider?: CompletionOptions;
+
 	/**
-	 * The server provides signature help support.
+	 * サーバがホバー機能を提供するかどうか。
+	 */
+	hoverProvider?: boolean | HoverOptions;
+
+	/**
+	 * サーバがシグネチャヘルプ機能を提供するかどうか。
 	 */
 	signatureHelpProvider?: SignatureHelpOptions;
+
 	/**
-	 * The server provides goto definition support.
-	 */
-	definitionProvider?: boolean;
-	/**
-	 * The server provides Goto Type Definition support.
+	 * サーバが宣言元ジャンプ機能を提供するかどうか。
 	 *
-	 * Since 3.6.0
+	 * @since 3.14.0
 	 */
-	typeDefinitionProvider?: boolean | (TextDocumentRegistrationOptions & StaticRegistrationOptions);
+	declarationProvider?: boolean | DeclarationOptions | DeclarationRegistrationOptions;
+
 	/**
-	 * The server provides Goto Implementation support.
+	 * サーバが定義ジャンプ機能を提供するかどうか。
+	 */
+	definitionProvider?: boolean | DefinitionOptions;
+
+	/**
+	 * サーバが型定義ジャンプ機能を提供するかどうか。
 	 *
-	 * Since 3.6.0
+	 * @since 3.6.0
 	 */
-	implementationProvider?: boolean | (TextDocumentRegistrationOptions & StaticRegistrationOptions);
+	typeDefinitionProvider?: boolean | TypeDefinitionOptions | TypeDefinitionRegistrationOptions;
+
 	/**
-	 * The server provides find references support.
+	 * サーバが実装先ジャンプ機能を提供するかどうか。
+	 *
+	 * @since 3.6.0
 	 */
-	referencesProvider?: boolean;
+	implementationProvider?: boolean | ImplementationOptions | ImplementationRegistrationOptions;
+
 	/**
-	 * The server provides document highlight support.
+	 * サーバがリファレンス機能を提供するかどうか。
 	 */
-	documentHighlightProvider?: boolean;
+	referencesProvider?: boolean | ReferenceOptions;
+
 	/**
-	 * The server provides document symbol support.
+	 * サーバがドキュメントハイライト機能を提供するかどうか。
 	 */
-	documentSymbolProvider?: boolean;
+	documentHighlightProvider?: boolean | DocumentHighlightOptions;
+
 	/**
-	 * The server provides workspace symbol support.
+	 * サーバがドキュメントシンボル機能を提供するかどうか。
 	 */
-	workspaceSymbolProvider?: boolean;
+	documentSymbolProvider?: boolean | DocumentSymbolOptions;
+
 	/**
-	 * The server provides code actions. The `CodeActionOptions` return type is only
-	 * valid if the client signals code action literal support via the property
-	 * `textDocument.codeAction.codeActionLiteralSupport`.
+	 * サーバがコードアクション機能を提供するかどうか。`CodeActionOptions` はクラ
+	 * イアントが `textDocument.codeAction.codeActionLiteralSupport` プロパティで
+	 * コードアクションリテラルをサポートすることを伝えた場合のみ有効な型である。
 	 */
 	codeActionProvider?: boolean | CodeActionOptions;
+
 	/**
-	 * The server provides code lens.
+	 * サーバがコードレンズ機能を提供するかどうか。
 	 */
 	codeLensProvider?: CodeLensOptions;
+
 	/**
-	 * The server provides document formatting.
-	 */
-	documentFormattingProvider?: boolean;
-	/**
-	 * The server provides document range formatting.
-	 */
-	documentRangeFormattingProvider?: boolean;
-	/**
-	 * The server provides document formatting on typing.
-	 */
-	documentOnTypeFormattingProvider?: DocumentOnTypeFormattingOptions;
-	/**
-	 * The server provides rename support. RenameOptions may only be
-	 * specified if the client states that it supports
-	 * `prepareSupport` in its initial `initialize` request.
-	 */
-	renameProvider?: boolean | RenameOptions;
-	/**
-	 * The server provides document link support.
+	 * サーバがドキュメントリンク機能を提供するかどうか。
 	 */
 	documentLinkProvider?: DocumentLinkOptions;
+
 	/**
-	 * The server provides color provider support.
+	 * サーバが色参照機能を提供するかどうか。
 	 *
-	 * Since 3.6.0
+	 * @since 3.6.0
 	 */
-	colorProvider?: boolean | ColorProviderOptions | (ColorProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions);
+	colorProvider?: boolean | DocumentColorOptions | DocumentColorRegistrationOptions;
+
 	/**
-	 * The server provides folding provider support.
+	 * サーバがドキュメントフォーマット機能を提供するかどうか。
+	 */
+	documentFormattingProvider?: boolean | DocumentFormattingOptions;
+
+	/**
+	 * サーバが範囲ドキュメントフォーマット機能を提供するかどうか。
+	 */
+	documentRangeFormattingProvider?: boolean | DocumentRangeFormattingOptions;
+
+	/**
+	 * サーバが入力中ドキュメントフォーマット機能を提供するかどうか。
+	 */
+	documentOnTypeFormattingProvider?: DocumentOnTypeFormattingOptions;
+
+	/**
+	 * サーバがリネーム機能を提供するかどうか。`RenameOptions` はクライアントが
+	 * `initialize` リクエストで `prepareSupport` を提供する場合のみ指定される可
+	 * 能性がある。
+	 */
+	renameProvider?: boolean | RenameOptions;
+
+	/**
+	 * サーバが折り畳み機能を提供するかどうか。
 	 *
-	 * Since 3.10.0
+	 * @since 3.10.0
 	 */
-	foldingRangeProvider?: boolean | FoldingRangeProviderOptions | (FoldingRangeProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions);
+	foldingRangeProvider?: boolean | FoldingRangeOptions | FoldingRangeRegistrationOptions;
+
 	/**
-	 * The server provides go to declaration support.
-	 *
-	 * Since 3.14.0
-	 */
-	declarationProvider?: boolean | (TextDocumentRegistrationOptions & StaticRegistrationOptions);
-	/**
-	 * The server provides execute command support.
+	 * サーバがコマンド実行機能を提供するかどうか。
 	 */
 	executeCommandProvider?: ExecuteCommandOptions;
+
 	/**
-	 * Workspace specific server capabilities
+	 * サーバがワークスペースシンボル機能を提供するかどうか。
+	 */
+	workspaceSymbolProvider?: boolean;
+
+	/**
+	 * ワークスペース固有のサーバ機能。
 	 */
 	workspace?: {
 		/**
-		 * The server supports workspace folder.
+		 * サーバがワークスペースフォルダ機能をサポートするかどうか。
 		 *
-		 * Since 3.6.0
+		 * @since 3.6.0
 		 */
-		workspaceFolders?: {
-			/**
-			* The server has support for workspace folders
-			*/
-			supported?: boolean;
-			/**
-			* Whether the server wants to receive workspace folder
-			* change notifications.
-			*
-			* If a strings is provided the string is treated as a ID
-			* under which the notification is registered on the client
-			* side. The ID can be used to unregister for these events
-			* using the `client/unregisterCapability` request.
-			*/
-			changeNotifications?: string | boolean;
-		}
+		workspaceFolders?: WorkspaceFoldersServerCapabilities;
 	}
+
 	/**
-	 * Experimental server capabilities.
+	 * 実験的なサーバ機能
 	 */
 	experimental?: any;
 }
-
 ```
 
 #### Initialized notification
