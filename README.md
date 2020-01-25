@@ -1935,12 +1935,12 @@ interface InitializedParams {
 ```ts
 interface ShowMessageParams {
 	/**
-	 * The message type. See {@link MessageType}.
+	 * メッセージ種別。{@link MessageType} を参照。
 	 */
 	type: number;
 
 	/**
-	 * The actual message.
+	 * 実際のメッセージ。
 	 */
 	message: string;
 }
@@ -1951,19 +1951,19 @@ interface ShowMessageParams {
 ```ts
 export namespace MessageType {
 	/**
-	 * An error message.
+	 * エラーメッセージ。
 	 */
 	export const Error = 1;
 	/**
-	 * A warning message.
+	 * 警告メッセージ。
 	 */
 	export const Warning = 2;
 	/**
-	 * An information message.
+	 * 情報メッセージ。
 	 */
 	export const Info = 3;
 	/**
-	 * A log message.
+	 * ログメッセージ。
 	 */
 	export const Log = 4;
 }
