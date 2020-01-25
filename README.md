@@ -2720,6 +2720,61 @@ export interface ApplyWorkspaceEditResponse {
 
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
 
+#### Text Document Synchronization
+LSP において `textDocument/open`、`textDocument/change`、`textDocument/close`
+通知をクライアントがサポートすることは必須であり、クライアントはそれらのサポー
+トをオプトアウトできない。加えてサーバはそれら全てを実装するか全く実装しないか
+のいずれかでなければならない。つまりこれらの機能はクライアントとサーバ機能の組
+み合わせにより制御される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.synchronization.dynamicRegistration`
+* プロパティタイプ: `boolean`
+
+*サーバ機能:*
+* プロパティパス(省略可能): `textDocumentSync`
+* プロパティタイプ: 次で定義される `TextDocumentSyncKind | TextDocumentSyncOptions`:
+
+```ts
+/**
+ * ホスト(エディタ)がドキュメント変更の同期をどのようにサーバに行うかを定義す
+ * る。
+ */
+export namespace TextDocumentSyncKind {
+	/**
+	 * ドキュメントは全て同期されるべきでない。
+	 */
+	export const None = 0;
+
+	/**
+	 * ドキュメントは常にその中身全てを送信する。
+	 */
+	export const Full = 1;
+
+	/**
+	 * ドキュメントは開いた際に中身全てを送信することで同期される。それ以降はド
+	 * キュメントへの更新差分のみ送信される。
+	 */
+	export const Incremental = 2;
+}
+
+export interface TextDocumentSyncOptions {
+	/**
+	 * `textDocument/open` と `textDocument/close` 通知はサーバから送信される。省
+	 * 略した場合、それらの通知は送信されるべきではない。
+	 */
+	openClose?: boolean;
+	/**
+	 * `textDocument/change` 通知はサーバから送信される。
+	 * `TextDocumentSyncKind.None`、`TextDocumentSyncKind.Full`、
+	 * `TextDocumentSyncKind.Incremental` を参照。省略した場合、デフォルトで
+	 * `TextDocumentSyncKind.None` となる。
+	 */
+	change?: TextDocumentSyncKind;
+}
+
+```
+
 #### DidOpenTextDocument Notification
 ドキュメントオープン通知は新しいテキストドキュメントを開いたことを知らせるため
 にクライアントからサーバへ送信される。ドキュメントの実体はクライアントに管理さ
