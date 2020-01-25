@@ -2073,6 +2073,12 @@ export interface WorkDoneProgressCreateParams {
 機能 B については提供しない、ということも可能である
 (`TextDocumentClientCapabilities` を例として参照)。
 
+サーバは同じドキュメントセレクタに対する初期化時の静的に登録される機能と動的に
+登録される同じ機能を双方登録してはならない。サーバが静的、動的双方の登録をサポー
+トする場合、`initialize` リクエスト時にクライアント機能を確認し、クライアントが
+その機能について動的な登録をサポートしていない場合は静的な機能登録のみ行なわな
+ければならない。
+
 *リクエスト:*
 * メソッド: `client/registerCapability`
 * パラメータ: `RegistrationParams`
