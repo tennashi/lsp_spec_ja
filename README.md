@@ -2326,6 +2326,20 @@ export interface WorkspaceFoldersChangeEvent {
 #### DidChangeConfiguration Notification
 設定変更を知らせるためにクライアントからサーバに送信される通知。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `workspace.didChangeConfiguration`
+* プロパティタイプ: 次で定義される `DidChangeConfigurationClientCapabilities`:
+
+```ts
+export interface DidChangeConfigurationClientCapabilities {
+	/**
+	 * `workspace/didChangeConfiguration` リクエストが動的な登録をサポートするか
+	 * どうか。
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
 *通知:*
 * メソッド: `workspace/didChangeConfiguration`
 * パラメータ: 次で定義される `DidChangeConfigurationParams`:
