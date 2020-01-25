@@ -2535,6 +2535,50 @@ export namespace FileChangeType {
 ワークスペースシンボルリクエストはクエリ文字列に該当するプロジェクト全体のシン
 ボルを一覧するためにクライアントからサーバへ送信される。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `workspace.symbol`
+* プロパティタイプ: 次で定義される `WorkspaceSymbolClientCapabilities`:
+
+```ts
+interface WorkspaceSymbolClientCapabilities {
+	/**
+	 * シンボルリクエストの動的な登録をサポートする
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * `workspace/symbol` リクエスト内の `SymbolKind` 固有の機能。
+	 */
+	symbolKind?: {
+		/**
+		 * クライアントがサポートするシンボル種別の値。このプロパティが存在する場
+		 * 合、クライアントは範囲外の値を適切に処理し、不明な場合はデフォルト値に
+		 * フォールバックすることも保証する。
+		 *
+		 * このプロパティが与えられていない場合、クライアントは LSP の初期バージョ
+		 * ンで定義されていた `File` から `Array` までのみをサポートする。
+		 */
+		valueSet?: SymbolKind[];
+	}
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `workspaceSymbolProvider`
+* プロパティタイプ: `boolean | WorkspaceSymbolOptions`。`WorkspaceSymbolOptions` は次で定義される:
+
+```ts
+export interface WorkspaceSymbolOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `WorkspaceSymbolRegistrationOptions`:
+
+```ts
+export interface WorkspaceSymbolRegistrationOptions extends WorkspaceSymbolOptions {
+}
+```
+
 *リクエスト:*
 * メソッド: `workspace/symbol`
 * パラメータ: 次のように定義される `WorkspaceSymbolParams`:
@@ -2543,9 +2587,10 @@ export namespace FileChangeType {
 /**
  * ワークスペースシンボルリクエストのパラメータ。
  */
-interface WorkspaceSymbolParams {
+interface WorkspaceSymbolParams extends WorkDoneProgressParams, PartialResultParams {
 	/**
-	 * 空でないクエリ文字列
+	 * シンボルをフィルタするクエリ文字列。クライアントは全てのシンボルを要求する
+	 * ためには空文字列を送信する。
 	 */
 	query: string;
 }
@@ -2553,9 +2598,8 @@ interface WorkspaceSymbolParams {
 
 *レスポンス:*
 * 結果: 上で定義された `SymbolInformation[]` | `null`
+* 部分的結果: 上で定義された `SymbolInformation[]`
 * エラー: エラーコードと `workspace/symbol` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* 空
 
 #### Execute a command
 `workspace/executeCommand` リクエストはサーバ上でコマンドを実行するためにクライ
