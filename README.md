@@ -2415,56 +2415,22 @@ export interface ConfigurationItem {
 * クライアントは大抵一つ以上のサーバを起動する。全てのサーバが自身のファイル監視をするのであれば、CPU またはメモリの問題が発生する。
 * 一般的に、サーバのほうがクライアントよりも実装することが多い。なのでこの問題はクライアント側で解決するほうがよい。
 
-*通知:*
-* メソッド: `workspace/didChangeWatchedFiles`
-* パラメータ: 次で定義される `DidChangeWatchedFilesParams`:
+*クライアント機能:*
+* プロパティパス(省略可能): `workspace.didChangeWatchedFiles`
+* プロパティタイプ: 次で定義される `DidChangeWatchedFilesClientCapabilities`:
 
 ```ts
-interface DidChangeWatchedFilesParams {
+export interface DidChangeWatchedFilesClientCapabilities {
 	/**
-	 * 実際のファイルイベント。
+	 * `workspace/didChangeWatchedFiles` 通知が動的な機能登録をサポートするかどう
+	 * か。現在のプロトコルではサーバ側からの静的な設定はサポートされていないこと
+	 * を注意しておく。
 	 */
-	changes: FileEvent[];
+	dynamicRegistration?: boolean;
 }
 ```
 
-`FileEvent` は次のように記述される:
-
-```ts
-/**
- * ファイル変更を記述するイベント。
- */
-interface FileEvent {
-	/**
-	 * ファイルの URI。
-	 */
-	uri: DocumentUri;
-	/**
-	 * 変更種別。
-	 */
-	type: number;
-}
-
-/**
- * ファイルイベント種別
- */
-export namespace FileChangeType {
-	/**
-	 * ファイルが作成された。
-	 */
-	export const Created = 1;
-	/**
-	 * ファイルが変更された。
-	 */
-	export const Changed = 2;
-	/**
-	 * ファイルが削除された。
-	 */
-	export const Deleted = 3;
-}
-```
-
-*登録オプション:* `DidChangeWatchedFilesRegistrationOptions` は次のように定義される
+*登録オプション:* 次で定義される `DidChangeWatchedFilesRegistrationOptions`:
 
 ```ts
 /**
@@ -2514,7 +2480,55 @@ export namespace WatchKind {
 	 */
 	export const Delete = 4;
 }
+```
 
+*通知:*
+* メソッド: `workspace/didChangeWatchedFiles`
+* パラメータ: 次で定義される `DidChangeWatchedFilesParams`:
+
+```ts
+interface DidChangeWatchedFilesParams {
+	/**
+	 * 実際のファイルイベント。
+	 */
+	changes: FileEvent[];
+}
+```
+
+`FileEvent` は次のように記述される:
+
+```ts
+/**
+ * ファイル変更を記述するイベント。
+ */
+interface FileEvent {
+	/**
+	 * ファイルの URI。
+	 */
+	uri: DocumentUri;
+	/**
+	 * 変更種別。
+	 */
+	type: number;
+}
+
+/**
+ * ファイルイベント種別
+ */
+export namespace FileChangeType {
+	/**
+	 * ファイルが作成された。
+	 */
+	export const Created = 1;
+	/**
+	 * ファイルが変更された。
+	 */
+	export const Changed = 2;
+	/**
+	 * ファイルが削除された。
+	 */
+	export const Deleted = 3;
+}
 ```
 
 #### Workspace Symbols Request
