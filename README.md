@@ -2607,12 +2607,48 @@ interface WorkspaceSymbolParams extends WorkDoneProgressParams, PartialResultPar
 し、サーバからクライアントに送られる `workspace/applyEdit` を用いてワークスペー
 スへの変更を適用する。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `workspace.executeCommand`
+* プロパティタイプ: 次で定義される `ExecuteCommandClientCapabilities`:
+
+```ts
+export interface ExecuteCommandClientCapabilities {
+	/**
+	 * コマンド実行が動的な機能登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `executeCommandProvider`
+* プロパティタイプ: 次で定義される `ExecuteCommandOptions`:
+
+```ts
+export interface ExecuteCommandOptions extends WorkDoneProgressOptions {
+	/**
+	 * サーバで実行されるコマンド。
+	 */
+	commands: string[]
+}
+```
+
+*登録オプション:* 次で定義される `ExecuteCommandRegistrationOptions`
+
+```ts
+/**
+ * 実行コマンド登録オプション
+ */
+export interface ExecuteCommandRegistrationOptions extends ExecuteCommandOptions {
+}
+```
+
 *リクエスト:*
 * メソッド: `workspace/executeCommand`
 * パラメータ: 次のように定義される `ExecuteCommandParams`:
 
 ```ts
-export interface ExecuteCommandParams {
+export interface ExecuteCommandParams extends WorkDoneProgressParams {
 
 	/**
 	 * コマンドハンドラの識別子。
@@ -2625,26 +2661,15 @@ export interface ExecuteCommandParams {
 }
 ```
 
+引数は通常、コマンドがサーバからクライアントに戻ってきた際に指定される。コマン
+ドを返すリクエストは例えば `textDocument/codeAction` や `textDocument/codeLens`
+である。
+
 *レスポンス:*
 * 結果: `any` | `null`
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
 
-*登録オプション:* 次で定義される `ExecuteCommandRegistrationOptions`
-
-```ts
-/**
- * 実行コマンド登録オプション
- */
-export interface ExecuteCommandRegistrationOptions {
-	/**
-	 * サーバ上で実行されるコマンド。
-	 */
-	commands: string[]
-}
-
-```
-
-#### Applies a WrokspaceEdit
+#### Applies a WorkspaceEdit
 `workspace/applyEdit` リクエストはクライアント側のリソースを変更するためにサー
 バからクライアントに送信される。
 
