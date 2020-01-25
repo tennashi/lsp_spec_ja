@@ -2371,6 +2371,10 @@ interface DidChangeConfigurationParams {
 リソース URI の設定が返されるべきである。クライアントは与えられたスコープで設定
 が提供できない場合、返される配列には `null` を入れる必要がある。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `workspace.configuration`
+* プロパティタイプ: `boolean`
+
 *リクエスト:*
 * メソッド: `workspace/configuration`
 * パラメータ: 次で定義される `ConfigurationParams`
