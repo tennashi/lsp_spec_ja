@@ -3042,14 +3042,21 @@ interface DidSaveTextDocumentParams {
 ```
 
 #### DidCloseTextDocument Notification
-`DidCloseTextDocument` 通知はクライアントでドキュメントが閉じられたときにクライ
-アントからサーバへ送信される。ドキュメントの実体はドキュメント URI の指す先に存
-在する(例えばドキュメント URI がファイル URI の場合実体はディスクに存在する)。
-オープン通知と同様にクローズ通知はドキュメントの中身の管理についてのものである。
-クローズ通知を受けることはそれまでにドキュメントがエディタで開かれていたことを
-意味するわけではない。クローズ通知の前にオープン通知が送信されている必要がある。
-サーバがリクエストを満たす能力はテキストドキュメントが開いているか閉じているか
-に依らないことを注意する。
+`textDocument/didClose` 通知はクライアントでドキュメントが閉じられたときにクラ
+イアントからサーバへ送信される。ドキュメントの実体はドキュメント URI の指す先に
+存在する(例えばドキュメント URI がファイル URI の場合実体はディスクに存在する)。
+`textDocument/didOpen` 通知と同様に `textDocument/didClose` 通知はドキュメント
+の中身の管理についてのものである。`textDocument/didClose` 通知を受けることはそ
+れまでにドキュメントがエディタで開かれていたことを意味するわけではない。
+`textDocument/didClose` 通知の前に `textDocument/didOpen` 通知が送信されている
+必要がある。サーバがリクエストを満たす能力はテキストドキュメントが開いているか
+閉じているかに依らないことを注意する。
+
+*クライアント機能:* 一般的な同期[クライアント機能](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#textDocument_synchronization_cc)
+
+*サーバ機能:* 一般的な同期[サーバ機能](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#textDocument_synchronization_sc)
+
+*登録オプション:* `TextDocumentRegisterationOptions`
 
 *通知:*
 * メソッド: `textDocument/didClose`
@@ -3064,7 +3071,84 @@ interface DidCloseTextDocumentParams {
 }
 ```
 
-*登録オプション:* `TextDocumentRegistrationOptions`
+`TextDocumentSyncClientCapabilities` と `TextDocumentSyncOptions` は最終的に次
+のようになる。
+
+```ts
+export interface TextDocumentSyncClientCapabilities {
+	/**
+	 * テキストドキュメント同期機能の動的な登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * クライアントは `textDocument/willSave` 通知の送信をサポートする。
+	 */
+	willSave?: boolean;
+
+	/**
+	 * クライアントは `textDocument/willSaveWaitUntil` リクエストの送信をサポート
+	 * し、保存前にドキュメントに適用するテキスト編集を提供するレスポンスを待つ。
+	 */
+	willSaveWaitUntil?: boolean;
+
+	/**
+	 * クライアントは `textDocument/didSave` 通知の送信をサポートする。
+	 */
+	didSave?: boolean;
+}
+
+/**
+ * ホスト(エディタ)がドキュメント変更の同期をどのようにサーバに行うかを定義す
+ */
+export namespace TextDocumentSyncKind {
+	/**
+	 * ドキュメントは全て同期されるべきでない。
+	 */
+	export const None = 0;
+
+	/**
+	 * ドキュメントは常にその中身全てを送信する。
+	 */
+	export const Full = 1;
+
+	/**
+	 * ドキュメントは開いた際に中身全てを送信することで同期される。それ以降はド
+	 * キュメントへの更新差分のみ送信される。
+	 */
+	export const Incremental = 2;
+}
+
+export interface TextDocumentSyncOptions {
+	/**
+	 * `textDocument/open` と `textDocument/close` 通知はサーバから送信される。省
+	 * 略した場合、それらの通知は送信されるべきではない。
+	 */
+	openClose?: boolean;
+	/**
+	 * `textDocument/change` 通知はサーバから送信される。
+	 * `TextDocumentSyncKind.None`、`TextDocumentSyncKind.Full`、
+	 * `TextDocumentSyncKind.Incremental` を参照。省略した場合、デフォルトで
+	 * `TextDocumentSyncKind.None` となる。
+	 */
+	change?: number;
+	/**
+	 * 有効な場合、`textDocument/willSave` 通知はサーバから送信される。省略した場
+	 * 合、それらの通知は送信されるべきではない。
+	 */
+	willSave?: boolean;
+	/**
+	 * 有効な場合、`textDocument/willSaveWaitUntil` リクエストはサーバから送信さ
+	 * れる。省略した場合、それらの通知は送信されるべきではない。
+	 */
+	willSaveWaitUntil?: boolean;
+	/**
+	 * 有効な場合、`textDocument/didSave` 通知はサーバから送信される。省略した場
+	 * 合、それらの通知は送信されるべきではない。
+	 */
+	save?: SaveOptions;
+}
+```
 
 #### PublishDiagnostics Notification
 `PublishDiagnostics` 通知は検証結果を伝えるためにサーバからクライアントに送信さ
