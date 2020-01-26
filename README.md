@@ -2955,12 +2955,27 @@ export namespace TextDocumentSaveReason {
 ```
 
 #### WillSaveWaitUntilTextDocument Request
-`WillSaveWaitUntilTextDocument` リクエストはドキュメントが保存される前にクライ
+`textDocument/willSaveWaitUntil` リクエストはドキュメントが保存される前にクライ
 アントからサーバに送信される。リクエストは保存されるまでにテキストドキュメント
 に適用された `TextEdit` の配列を返すことができる。テキスト編集の計算に非常に時
 間がかかった場合やサーバがこのリクエストで常に失敗する場合、クライアントは結果
 を落とすかもしれないことに注意する。これは保存を早く、信頼性のあるものにするた
 めに行なっている。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.synchronization.willSaveWaitUntil`
+* プロパティタイプ: `boolean`
+
+この機能はクライアントが `textDocument/willSaveWaitUntil` 通知をサポートするこ
+とを示す。
+
+*サーバ機能:*
+* プロパティパス(省略可能): `textDocumentSync.willSaveWaitUntil`
+* プロパティタイプ: `boolean`
+
+この機能はサーバが `textDocument/willSaveWaitUntil` 通知を受信できることを示す。
+
+*登録オプション:* `TextDocumentRegistrationOptions`
 
 *リクエスト:*
 * メソッド: `textDocument/willSaveWaitUntil`
@@ -2968,9 +2983,7 @@ export namespace TextDocumentSaveReason {
 
 *レスポンス:*
 * 結果: `TextEdit[]` | `null`
-* エラー: エラーコードと `willSaveWaitUntil` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
+* エラー: エラーコードと `textDocument/willSaveWaitUntil` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### DidSaveTextDocument Notification
 `DidSaveTextDocument` 通知はクライアントでドキュメントを保存したときにクライア
