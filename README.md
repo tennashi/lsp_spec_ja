@@ -2894,8 +2894,22 @@ interface TextDocumentContentChangeEvent {
 ```
 
 #### WillSaveTextDocument Notification
-`WillSaveTextDocument` 通知はドキュメントが保存される前にクライアントからサーバ
-へ送信される。
+`textDocument/willSave` 通知はドキュメントが保存される前にクライアントからサー
+バへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.synchronization.willSave`
+* プロパティタイプ: `boolean`
+
+この機能はクライアントが `textDocument/willSave` 通知をサポートすることを示す。
+
+*サーバ機能:*
+* プロパティパス(省略可能): `textDocumentSync.willSave`
+* プロパティタイプ: `boolean`
+
+この機能はサーバが `textDocument/willSave` 通知を受信できることを示す。
+
+*登録オプション:* `TextDocumentRegistionOptions`
 
 *通知:*
 * メソッド: `textDocument/willSave`
@@ -2939,8 +2953,6 @@ export namespace TextDocumentSaveReason {
 	export const FocusOut = 3;
 }
 ```
-
-*登録オプション:* `TextDocumentRegisterOptions`
 
 #### WillSaveWaitUntilTextDocument Request
 `WillSaveWaitUntilTextDocument` リクエストはドキュメントが保存される前にクライ
