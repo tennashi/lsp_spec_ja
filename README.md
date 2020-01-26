@@ -2986,9 +2986,43 @@ export namespace TextDocumentSaveReason {
 * エラー: エラーコードと `textDocument/willSaveWaitUntil` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### DidSaveTextDocument Notification
-`DidSaveTextDocument` 通知はクライアントでドキュメントを保存したときにクライア
+`textDocument/didSave` 通知はクライアントでドキュメントを保存したときにクライア
 ントからサーバへ送信される。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.synchronization.didSave`
+* プロパティタイプ: `boolean`
+
+この機能はクライアントが `textDocument/didSave` 通知をサポートするこ
+とを示す。
+
+*サーバ機能:*
+* プロパティパス(省略可能): `textDocumentSync.didSave`
+* プロパティタイプ: `boolean | SaveOptions` `SaveOptions` は次で定義される:
+
+```ts
+export interface SaveOptions {
+	/**
+	 * クライアントが保存時に中身を含むことを仮定する。
+	 */
+	includeText?: boolean;
+}
+```
+
+この機能はサーバが `textDocument/didSave` 通知を受信できることを示す。
+
+*登録オプション:* 次で定義される `TextDocumentSaveRegistrationOptions`:
+
+```ts
+export interface TextDocumentSaveRegistrationOptions extends TextDocumentRegistrationOptions {
+	/**
+	 * クライアントが保存時に中身を含むことを仮定する。
+	 */
+	includeText?: boolean;
+}
+```
+
+*通知:*
 * メソッド: `textDocument/didSave`
 * パラメータ: 次で定義される `DidSaveTextDocumentParams`:
 
@@ -3005,18 +3039,6 @@ interface DidSaveTextDocumentParams {
 	 */
 	text?: string;
 }
-```
-
-*登録オプション:* 次で定義される `TextDocumentSaveRegistrationOptions`:
-
-```ts
-export interface TextDocumentSaveRegistrationOptions extends TextDocumentRegistrationOptions {
-	/**
-	 * クライアントが保存時のコンテントを含むことをサポートする。
-	 */
-	includeText?: boolean;
-}
-
 ```
 
 #### DidCloseTextDocument Notification
