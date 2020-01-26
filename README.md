@@ -2812,9 +2812,28 @@ interface DidOpenTextDocumentParams {
 ```
 
 #### DidChangeTextDocument Notification
-ドキュメント変更通知はテキストドキュメントへの変更を伝えるためにクライアントか
-らサーバへ送信される。2.0 でパラメータが適切なバージョン番号と言語識別子を持つ
-ように変更された。
+`textDocument/didChange` 通知はテキストドキュメントへの変更を伝えるためにクライ
+アントからサーバへ送信される。2.0 でパラメータが適切なバージョン番号と言語識別
+子を持つように変更された。
+
+*クライアント機能:* 一般的な同期[クライアント機能](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#textDocument_synchronization_cc)
+
+*サーバ機能:* 一般的な同期[サーバ機能](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#textDocument_synchronization_sc)
+
+*登録オプション:* 次で定義される `TextDocumentChangeRegisterationOptions`:
+
+```ts
+/**
+ * テキストドキュメント変更イベントを登録する際使用されるオプションを記述する。
+ */
+export interface TextDocumentChangeRegistrationOptions extends TextDocumentRegistrationOptions {
+	/**
+	 * どのようにドキュメントをサーバへ同期するか。TextDocumentSyncKind.Full と
+	 * TextDocumentSyncKind.Incremental を参照。
+	 */
+	syncKind: number;
+}
+```
 
 *通知:*
 * メソッド: `textDocument/didChange`
@@ -2829,9 +2848,18 @@ interface DidChangeTextDocumentParams {
 	textDocument: VersionedTextDocumentIdentifier;
 
 	/**
-	 * コンテントの変更。コンテントの変更はドキュメントへの単一の状態変更として記
-	 * 述される。つまり状態 S にあるドキュメントの中身の変更 c1 と c2 がある場合、
-	 * c1 はドキュメントを S' にし、c2 は S'' にする。
+	 * 実際の中身の変更。中身の変更はドキュメントへの単一の状態変更として記述され
+	 * る。つまりドキュメントの状態 S にあるドキュメントの中身の変更 c1(配列のイ
+	 * ンデックスは0) と c2(配列のインデックスは1) がある場合、 c1 はドキュメント
+	 * を S' にし、c2 は S'' にする。つまり c1 は状態 S で計算され、c2 は状態 S'
+	 * で計算される。
+	 *
+   * ドキュメントの中身を反映するためには次のアプローチで変更イベントを用いる。
+	 * - 同一の初期状態から始める。
+	 * - 受信した順に `textDocument/didChange` 通知を適用する。
+	 * - 受信した順に単一の通知の `TextDocumentContentChangeEvent` の列を適用す
+	 *   る。
+	 *
 	 */
 	contentChanges: TextDocumentContentChangeEvent[];
 }
@@ -2848,6 +2876,8 @@ interface TextDocumentContentChangeEvent {
 
 	/**
 	 * 置換される範囲の長さ。
+	 *
+	 * @deprecated 代わりに `range` を用いる。
 	 */
 	rangeLength?: number;
 
@@ -2855,23 +2885,12 @@ interface TextDocumentContentChangeEvent {
 	 * 範囲/ドキュメントの新しいテキスト。
 	 */
 	text: string;
-}
-```
-
-*登録オプション:* 次で定義される `TextDocumentChangeRegisterationOptions`:
-
-```ts
-/**
- * テキストドキュメント変更イベントを登録する際使用されるオプションを記述する。
- */
-export interface TextDocumentChangeRegistrationOptions extends TextDocumentRegistrationOptions {
+} | {
 	/**
-	 * どのようにドキュメントをサーバへ同期するか。TextDocumentSyncKind.Full と
-	 * TextDocumentSyncKind.Incremental を参照。
+	 * ドキュメント全体の新しいテキスト。
 	 */
-	syncKind: number;
+	text: string;
 }
-
 ```
 
 #### WillSaveTextDocument Notification
