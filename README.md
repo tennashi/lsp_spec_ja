@@ -3151,10 +3151,11 @@ export interface TextDocumentSyncOptions {
 ```
 
 #### PublishDiagnostics Notification
-`PublishDiagnostics` 通知は検証結果を伝えるためにサーバからクライアントに送信さ
-れる。
+`textDocument/publishDiabnostics` 通知は検証結果を伝えるためにサーバからクライ
+アントに送信される。
 
-診断結果はサーバのものなので、必要であればクリアすることはサーバの責任である。VS Code では診断結果を生成するサーバは次のルールに従う:
+診断結果はサーバのものなので、必要であればクリアすることはサーバの責任である。
+VS Code では診断結果を生成するサーバは次のルールに従う:
 
 * 単一ファイルからなる言語 (例えば HTML) の場合、ファイルを閉じた際に診断結果をクリアする。
 * プロジェクトシステムを持つ言語 (例えば C#) の場合、ファイルを閉じた際には診断結果をクリアしない。プロジェクトが開かれたとき、全てのファイルの全ての診断結果は再計算される(かキャッシュから読まれる)。
@@ -3163,6 +3164,42 @@ export interface TextDocumentSyncOptions {
 責任である。計算結果が空の場合、以前の診断結果をクリアするために空配列を送信す
 る必要がある。新たに送信された診断結果は常に以前に送信された診断結果を置き換え
 る。クライアント側でマージされることはない。
+
+[Diagnostic](https://microsoft.github.io/language-server-protocol/specifications/specification-3-15/#diagnostic) セクションも参照。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.publishDiagnostics`
+* プロパティタイプ: 次で定義される `PublishDiagnosticsClientCapabilities`:
+
+```ts
+export interface PublishDiagnosticsClientCapabilities {
+	/**
+	 * クライアントが診断結果に関連する情報を受け入れるかどうか。
+	 */
+	relatedInformation?: boolean;
+
+	/**
+	 * クライアントは診断結果についてのメタデータとしてのタグをサポートする。クラ
+	 * イアントは不明なタグを適切に処理する必要がある。
+	 *
+	 * @since 3.15.0
+	 */
+	tagSupport?: {
+		/**
+		 * クライアントにサポートされるタグ。
+		 */
+		valueSet: DiagnosticTag[];
+	};
+
+	/**
+	 * クライアントが `textDocument/publishDiagnostics` 通知のパラメータの
+	 * `version` プロパティを処理するかどうか。
+	 *
+	 * @since 3.15.0
+	 */
+	versionSupport?: boolean;
+}
+```
 
 *通知:*
 * メソッド: `textDocument/publishDiagnostics`
