@@ -3233,16 +3233,146 @@ UI で表示される。補完候補を全て計算するコストが高い場�
 このとき返される補完候補には `documentation` プロパティは入っているべきである。
 リクエストは `detail` と `documentation` プロパティの計算を遅延することができ
 る。しかし `sortText`、`filterText`、`insertText`、`textEdit` のような最初のソー
-トとフィルタに必要なプロパティは `textDocument/cmpletion` レスポンスに含まれて
+トとフィルタに必要なプロパティは `textDocument/completion` レスポンスに含まれて
 いる必要があり、`completionItem/resolve` 中に変更してはならない。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.completion`
+* プロパティタイプ: 次で定義される `CompletionClientCapabilities`
+
+```ts
+export interface CompletionClientCapabilities {
+	/**
+	 * 補完機能の動的な登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * クライアントは次の `CompletionItem` 固有の機能をサポートする。
+	 */
+	completionItem?: {
+		/**
+		 * クライアントは挿入テキストとしてスニペットをサポートする。
+		 *
+		 * スニペットはタブ位置とプレースホルダ `$1`、`$2`、`${3:foo}` で定義でき
+		 * る。`$0` は最後のタブ位置を定め、デフォルトでスニペットの最後となる。同
+		 * じ識別子プレースホルダはリンクしている、つまり一方を入力すると他も更新さ
+		 * れる。
+		 */
+		snippetSupport?: boolean;
+
+		/**
+		 * クライアントは補完候補のコミット文字をサポートする。
+		 */
+		commitCharactersSupport?: boolean
+
+		/**
+		 * クライアントは `documentation` プロパティに次のコンテントフォーマットを
+		 * サポートする。順序はクライアントで優先されるフォーマットを表わす。
+		 */
+		documentationFormat?: MarkupKind[];
+
+		/**
+		 * クライアントは補完候補の `deprecated` プロパティをサポートする。
+		 */
+		deprecatedSupport?: boolean;
+
+		/**
+		 * クライアントは補完候補の `preselect` プロパティをサポートする。
+		 */
+		preselectSupport?: boolean;
+
+		/**
+		 * クライアントは補完候補についてのメタデータとしてのタグをサポートする。ク
+		 * ライアントは不明なタグを適切に処理する必要がある。特に、クライアントは
+		 * `completionItem/resolve` 呼び出しで補完候補をサーバに返す際、不明なタグ
+		 * を保存することが必要である。
+		 *
+		 * @since 3.15.0
+		 */
+		tagSupport?: {
+			/**
+			 * クライアントによってサポートされるタグ。
+			 */
+			valueSet: CompletionItemTag[]
+		}
+	};
+
+	completionItemKind?: {
+		/**
+		 * クライアントがサポートする補完候補種別。このプロパティが存在する場合、ク
+		 * ライアントは範囲外の値を適切に処理し、不明な場合はデフォルト値にフォール
+		 * バックすることも保証する。
+		 *
+		 * このプロパティが与えられていない場合、クライアントは LSP の初期バージョ
+		 * ンで定義されていた `Text` から `Reference` までのみをサポートする。
+		 */
+		valueSet?: CompletionItemKind[];
+	};
+
+	/**
+	 * クライアントは `textDocument/completion` リクエストに追加のコンテキスト情
+	 * 報を送信することをサポートする。
+	 */
+	contextSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `completionProvider`
+* プロパティタイプ: 次で定義される `CompletionOptions`
+
+```ts
+/**
+ * Completion options.
+ */
+export interface CompletionOptions extends WorkDoneProgressOptions {
+	/**
+	 * ほとんどのツールはキーボードショートカット(例えば Ctrl+Space)を用いて明示
+	 * 的にリクエストすることなく自動的に補完リクエストを発火する。典型的にはユー
+	 * ザが識別子の入力を始めたときに補完は開始される。例えばユーザが `c` を
+	 * JavaScript ファイルで入力した場合、コード補完は他の候補と共に `console` を
+	 * 候補として自動的にポップアップする。識別子を構成する文字をここにリストする
+	 * 必要はない。
+	 *
+	 * コード補完が識別子内で無効な文字により自動的に発火されるべき場合(例えば
+	 * JavaScript での `.`)、`triggerCharacters` に列挙する。
+	 */
+	triggerCharacters?: string[];
+
+	/**
+	 * 補完を確定することのできる全ての文字。クライアントが補完候補毎の確定文字を
+	 * サポートしていない場合に使われる。
+	 * `ClientCapabilities.textDocument.completion.completionItem.commitCharactesSupport`
+	 * を参照。
+	 *
+	 * サーバが `allCommitCharacters` と各補完候補の確定文字を双方提供している場
+	 * 合、補完候補に設定されたものが優先される。
+	 *
+	 * @since 3.2.0
+	 */
+	allCommitCharacters?: string[];
+
+	/**
+	 * サーバが補完候補の追加情報を解決することをサポートする。
+	 */
+	resolveProvider?: boolean;
+}
+```
+
+*登録オプション:* 次で定義される `CompletionRegistrationOptions`:
+
+```ts
+export interface CompletionRegistrationOptions extends TextDocumentRegistrationOptions, CompletionOptions {
+}
+```
+
 *リクエスト:*
-* メソッド: `textDocumentcompletion`
+* メソッド: `textDocument/completion`
 * パラメータ: 次で定義される `CompletionParams`
 
 ```ts
-export interface CompletionParams extends TextDocumentPositionParams {
-
+export interface CompletionParams extends TextDocumentPositionParams, WorkDoneProgressPrams, PartialResultParams {
 	/**
 	 * 補完コンテキスト。クライアントが
 	 * `ClientCapabilities.textDocument.completion.contextSupport === true` を用
@@ -3256,8 +3386,8 @@ export interface CompletionParams extends TextDocumentPositionParams {
  */
 export namespace CompletionTriggerKind {
 	/**
-	 * 補完は識別子(24x7)の入力、手動起動(例えば Ctrl+Space) または API 経由で起
-	 * 動された。
+	 * 補完は識別子(24x7 コード補完)の入力、手動起動(例えば Ctrl+Space) または
+	 * API 経由で起動された。
 	 */
 	export const Invoked: 1 = 1;
 
@@ -3286,7 +3416,7 @@ export interface CompletionContext {
 
 	/**
 	 * コード補完を起動した文字(単一の文字)。`triggerKind !==
-	 * CompletionTriggerKind.TriggerCharacter` のとき `undefined` となる
+	 * CompletionTriggerKind.TriggerCharacter` のとき未定義となる。
 	 */
 	triggerCharacter?: string;
 }
@@ -3334,10 +3464,23 @@ namespace InsertTextFormat {
 
 type InsertTextFormat = 1 | 2;
 
+/**
+ * 補完候補タグは補完候補の表示を微調整する追加情報である。
+ *
+ * @since 3.15.0
+ */
+export namespace CompletionItemTag {
+	/**
+	 * 補完候補は廃止として表示される。大抵打ち消し線を用いる。
+	 */
+	export const Deprecated = 1;
+}
+
+export type CompletionItemTag = 1;
+
 interface CompletionItem {
 	/**
-	 * 補完候補のラベル。デフォルトではこの候補を選択したときに挿入されるテキス
-	 * ト。
+	 * 補完候補のラベル。デフォルトでこの候補を選択したときに挿入されるテキスト。
 	 */
 	label: string;
 
@@ -3348,17 +3491,26 @@ interface CompletionItem {
 	kind?: number;
 
 	/**
+	 * この補完候補のタグ。
+	 *
+	 * @since 3.15.0
+	 */
+	tags?: CompletionItemTag[];
+
+	/**
 	 * 型やシンボル情報のような、この候補の追加情報を与える可読な文字列。
 	 */
 	detail?: string;
 
 	/**
-	 * コメントを表わす可読な文字列。
+	 * コメントを表す可読な文字列。
 	 */
 	documentation?: string | MarkupContent;
 
 	/**
 	 * この候補が非推奨かどうかを指す。
+	 *
+	 * @deprecated サポートされている場合は `tags` を代わりに用いる。
 	 */
 	deprecated?: boolean;
 
@@ -3473,44 +3625,8 @@ namespace CompletionItemKind {
 }
 ```
 
+* 部分的結果: `CompletionItem[]` または `CompletionList` の後に `CompletionItem[]`。最初に与えられた結果が `CompletionList` 型の場合、後に続く `CompletionItem[]` は `CompletionList` の `items` プロパティに追加していく。
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* 次で定義される `CompletionRegistrationOptions`:
-
-```ts
-export interface CompletionRegistrationOptions extends TextDocumentRegistrationOptions {
-	/**
-	 * ほとんどのツールはキーボードショートカット(例えば Ctrl+Space)を用いて明示
-	 * 的にリクエストすることなく自動的に補完リクエストを発火する。典型的にはユー
-	 * ザが識別子の入力を始めたときに補完は開始される。例えばユーザが `c` を
-	 * JavaScript ファイルで入力した場合、コード補完は他の候補と共に `console` を
-	 * 候補として自動的にポップアップする。識別子を構成する文字をここにリストする
-	 * 必要はない。
-	 *
-	 * コード補完が識別子内で無効な文字により自動的に発火されるべき場合(例えば
-	 * JavaScript での `.`)、`triggerCharacters` に列挙する。
-	 */
-	triggerCharacters?: string[];
-
-	/**
-	 * 補完を確定することのできる全ての文字。クライアントが補完候補毎の確定文字を
-	 * サポートしていない場合に使われる。
-	 * `ClientCapabilities.textDocument.completion.completionItem.commitCharactesSupport`
-	 * を参照。
-	 *
-	 * サーバが `allCommitCharacters` と各補完候補の確定文字を双方提供している場
-	 * 合、補完候補に設定されたものが優先される。
-	 *
-	 * 3.2.0 から
-	 */
-	allCommitCharacters?: string[];
-
-	/**
-	 * サーバが補完候補の追加情報を解決することをサポートする。
-	 */
-	resolveProvider?: boolean;
-}
-```
 
 補完候補はスニペットをサポートする(`InsertTextFormat.Snippet` を参照)。スニペッ
 トのフォーマットは次のように定義される。
