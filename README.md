@@ -3730,12 +3730,52 @@ text        ::= .*
 
 
 #### Hover Request
-`Hover` リクエストは与えられたテキスト位置でのホバー情報を要求するためにクライ
-アントからサーバへ送信される。
+`document/hover` リクエストは与えられたテキスト位置でのホバー情報を要求するため
+にクライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.hover`
+* プロパティタイプ: 次で定義される `HoverClientCapabilities`:
+
+```ts
+export interface HoverClientCapabilities {
+	/**
+	 * ホバー機能の動的な登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * クライアントは `content` プロパティに次のコンテントフォーマットをサポート
+	 * する。順序はクライアントでのフォーマットの優先度を表わす。
+	 */
+	contentFormat?: MarkupKind[];
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `hoverProvider`
+* プロパティタイプ: `boolean` または次で定義される `HoverOptions`:
+
+```ts
+export interface HoverOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `HoverRegistrationOptions`
+
+```ts
+export interface HoverRegistrationOptions extends TextDocumentRegistrationOptions, HoverOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/hover`
-* パラメータ: [`TextDocumentPositionParams`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textdocumentpositionparams)
+* パラメータ: 次で定義される `HoverParams`:
+
+```ts
+export interface HoverParams extends TextDocumentPositionParams, WorkDoneProgressParams {
+}
+```
 
 *レスポンス:*
 * 結果: 次で定義される `Hover` | `null`:
@@ -3751,8 +3791,8 @@ interface Hover {
 	contents: MarkedString | MarkedString[] | MarkupContent;
 
 	/**
-	 * オプションの `range` は、例えば背景色を変更するような、ホバーを表示するた
-	 * めに使われるテキストドキュメント内の範囲。
+	 * 省略可能な `range` は、例えば背景色を変更するような、ホバーを表示するため
+	 * に使われるテキストドキュメント内の範囲。
 	 */
 	range?: Range;
 }
@@ -3775,14 +3815,12 @@ interface Hover {
  * ```
  *
  * マークダウン文字列はサニタイズされる。- つまり、HTML はエスケープされる。
-* @deprecated MarkupContent を代わりに用いる。
-*/
+ * @deprecated MarkupContent を代わりに用いる。
+ */
 type MarkedString = string | { language: string; value: string };
 ```
 
 * エラー: エラーコードと `textDocument/hover` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Signature Help Request
 `Signnature Help` リクエストは与えられたカーソル位置でのシグネチャ情報を要求す
