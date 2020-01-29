@@ -4062,39 +4062,66 @@ interface ParameterInformation {
 
 * エラー: エラーコードと `textDocument/hover` リクエスト中に発生した例外がセットされたメッセージ。
 
-*登録オプション:* 次で定義される `SignatureHelpRegistrationOptions`:
-
-```ts
-export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrationOptions {
-	/**
-	 * The characters that trigger signature help
-	 * automatically.
-	 */
-	triggerCharacters?: string[];
-}
-
-```
-
 #### Goto Declaration Request
 バージョン 3.14.0 から
 
-`Goto Declaration` リクエストは与えられたテキストドキュメント位置のシンボルの宣
-言位置を解決するためにクライアントからサーバへ送信される。
+`textDocument/declaration` リクエストは与えられたテキストドキュメント位置のシン
+ボルの宣言位置を解決するためにクライアントからサーバへ送信される。
 
 結果の
 [`LocationLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#locationlink)[]
 型はバージョン 3.14.0 で導入され、一致するクライアント機能
-`clientCapabilities.textDocument.declaration.linkSupport` に依存する。
+`textDocument.declaration.linkSupport` に依存する。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.declaration`
+* プロパティタイプ: 次で定義される `DeclarationClientCapabilities`
+
+```ts
+export interface DeclarationClientCapabilities {
+	/**
+	 * 宣言元参照機能の動的な登録をサポートするかどうか。`true` がセットされた場
+	 * 合、クライアントは対応するサーバ機能の新しい返り値
+	 * `DeclarationRegistrationOptions` もサポートする。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * クライアントはリンク形式の追加メタデータをサポートする。
+	 */
+	linkSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `declarationProvider`
+* プロパティタイプ: `boolean | DeclarationOptions | DeclarationRegistrationOptions`。`DeclarationOptions` は次で定義される:
+
+```ts
+export interface DeclarationOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `DeclarationRegistrationOptions`:
+
+```ts
+export interface DeclarationRegistrationOptions extends DeclarationOptions, TextDocumentRegistrationOptions, StaticRegistrationOptions  {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/declaration`
-* パラメータ: [`TextDocumentPositionParams`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textdocumentpositionparams)
+* パラメータ: 次で定義される `DeclarationParams`
+
+```ts
+export interface DeclarationParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+}
+```
 
 *レスポンス:*
-* 結果: [`Location`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#location) | [`Location`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#location)[] | [`LocationLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#locationlink)[] | `null`
+* 結果: `Location` | `Location[]` | `LocationLink[]` | `null`
+* 部分的結果: `Location[]` | `LocationLink[]`
 * エラー: エラーコードと `textDocument/declaration` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Goto Definition Request
 バージョン 3.14.0 から
