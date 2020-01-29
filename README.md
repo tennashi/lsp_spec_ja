@@ -4183,23 +4183,63 @@ export interface DefinitionParams extends TextDocumentPositionParams, WorkDonePr
 #### Goto Type Definition Request
 バージョン 3.6.0 から
 
-`Goto Type Definition` リクエストは与えられたテキストドキュメント位置のシンボル
-の型定義位置を解決するためにクライアントからサーバへ送信される。
+`textDocument/typeDefinition` リクエストは与えられたテキストドキュメント位置の
+シンボルの型定義位置を解決するためにクライアントからサーバへ送信される。
 
-結果の
-[`LocationLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#locationlink)[]
-型はバージョン 3.14.0 で導入され、一致するクライアント機能
-`clientCapabilities.textDocument.declaration.linkSupport` に依存する。
+結果の `LocationLink[]` 型はバージョン 3.14.0 で導入され、一致するクライアント
+機能 `textDocument.typeDefinition.linkSupport` に依存する。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.typeDefinition`
+* プロパティタイプ: 次で定義される `TypeDefinitionClientCapabilities`
+
+```ts
+export interface TypeDefinitionClientCapabilities {
+	/**
+	 * 型定義元参照機能の動的な登録をサポートするかどうか。`true` がセットされた
+	 * 場合、クライアントは対応するサーバ機能の新しい返り値
+	 * `TypeDefinitionRegistrationOptions` もサポートする。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * クライアントはリンク形式の追加メタデータをサポートする。
+	 *
+	 * @since 3.14.0
+	 */
+	linkSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `typeDefinitionProvider`
+* プロパティタイプ: `boolean | TypeDefinitionOptions | TypeDefinitionRegistrationOptions`。`TypeDefinitionOptions` は次で定義される:
+
+```ts
+export interface TypeDefinitionOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `TypeDefinitionRegistrationOptions`:
+
+```ts
+export interface TypeDefinitionRegistrationOptions extends TextDocumentRegistrationOptions, TypeDefinitionOptions, StaticRegistrationOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/typeDefinition`
-* パラメータ: [`TextDocumentPositionParams`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textdocumentpositionparams)
+* パラメータ: 次で定義される `TypeDefinitionParams`:
+
+```ts
+export interface TypeDefinitionParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+}
+```
 
 *レスポンス:*
-* 結果: [`Location`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#location) | [`Location`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#location)[] | [`LocationLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#locationlink)[] | `null`
+* 結果: `Location` | `Location[]` | `LocationLink[]` | `null`
+* 部分的結果: `Location[]` | `LocationLink[]`
 * エラー: エラーコードと `textDocument/typeDefinition` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Goto Implementation Request
 バージョン 3.6.0 から
