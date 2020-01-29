@@ -4650,17 +4650,18 @@ interface SymbolInformation {
 * エラー: エラーコードと `textDocument/documentSymbol` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Code Action Request
-`Code Action` リクエストは与えられたテキストドキュメントと範囲上でコマンドを実
-行するためにクライアントからサーバへ送信される。コマンドは典型的には問題を修正
-するかコードを綺麗/リファクタリングするものである。`textDocument/codeAction` リ
-クエストの結果は、通常 UI 上で表示される `Command` リテラルの配列である。サーバ
-を多くのクライアントから使いやすくするために、指定されたコマンドはクライアント
-側ではなくサーバ側で処理すべきである(`workspace/executeCommand` と
-`ServerCapabilities.executeCommandPrivider` を参照)。クライアントがコードアク
-ションによる編集を提供する場合、モードを使用するべきである。
+`textDocument/codeAction` リクエストは与えられたテキストドキュメントと範囲上で
+コマンドを実行するためにクライアントからサーバへ送信される。コマンドは典型的に
+は問題を修正するかコードを綺麗/リファクタリングするものである。
+`textDocument/codeAction` リクエストの結果は、通常 UI 上で表示される `Command`
+リテラルの配列である。サーバを多くのクライアントから使いやすくするために、指定
+されたコマンドはクライアント側ではなくサーバ側で処理すべきである
+(`workspace/executeCommand` と `ServerCapabilities.executeCommandPrivider` を参
+照)。クライアントがコードアクションによる編集を提供する場合、モードを使用するべ
+きである。
 
 コマンドがサーバにより選択された場合、コマンドを実行するために再度
-(`workspace/executeCommand`)リクエストを送信するべきである。
+(`workspace/executeCommand` により)リクエストを送信するべきである。
 
 *バージョン 3.8.0 から:* `CodeAction` リテラルがサポートされることで、次のよう
 なシナリオが可能になる:
@@ -4668,9 +4669,74 @@ interface SymbolInformation {
 * コードアクションリクエストから直接ワークスペース編集に戻る機能。これにより実際のコードアクション実行のための別のサーバへの往復を避けることができる。しかし、サーバの提供者はコードアクションの計算が重かったり、編集が膨大な場合、結果がシンプルなコマンドであり必要な場合のみ実際の編集が実行されることが有用なサーバ実装であることを知っておくべきである。
 * 種別を用いたコードアクションのグループ化機能。クライアントはこの情報を無視できる。しかし、これにより例えば対応するメニューにコードアクションをグループ化できる(例えばリファクタリングメニュー内に全てのリファクタリング用コードアクションを表示する)。
 
-クライアントは対応するクライアント機能
-`textDocument.codeAction.codeActionLiteralSupport` により `CodeAction` リテラル
-とコードアクション種別をサポートすることを知らせる必要がある。
+クライアントは対応するクライアント機能 `codeAction.codeActionLiteralSupport` に
+より `CodeAction` リテラルとコードアクション種別をサポートすることを知らせる必
+要がある。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.codeAction`
+* プロパティタイプ: 次で定義される `CodeActionClientCapabilities`:
+
+```ts
+export interface CodeActionClientCapabilities {
+	/**
+	 * Whether code action supports dynamic registration.
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * The client supports code action literals as a valid
+	 * response of the `textDocument/codeAction` request.
+	 *
+	 * @since 3.8.0
+	 */
+	codeActionLiteralSupport?: {
+		/**
+		 * The code action kind is supported with the following value
+		 * set.
+		 */
+		codeActionKind: {
+
+			/**
+			 * The code action kind values the client supports. When this
+			 * property exists the client also guarantees that it will
+			 * handle values outside its set gracefully and falls back
+			 * to a default value when unknown.
+			 */
+			valueSet: CodeActionKind[];
+		};
+	};
+
+	/**
+	 * Whether code action supports the `isPreferred` property.
+	 * @since 3.15.0
+	 */
+	isPreferredSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `codeActionProvider`
+* プロパティタイプ: `boolean | CodeActionOptions`。`CodeActionOptions` は次で定義される:
+
+```ts
+export interface CodeActionOptions extends WorkDoneProgressOptions {
+	/**
+	 * CodeActionKinds that this server may return.
+	 *
+	 * The list of kinds may be generic, such as `CodeActionKind.Refactor`, or the server
+	 * may list out every specific kind they provide.
+	 */
+	codeActionKinds?: CodeActionKind[];
+}
+```
+
+*登録オプション:* 次で定義される `CodeActionRegisterationOptions`:
+
+```ts
+export interface CodeActionRegistrationOptions extends TextDocumentRegistrationOptions, CodeActionOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/codeAction`
@@ -4680,7 +4746,7 @@ interface SymbolInformation {
 /**
  * Params for the CodeActionRequest
  */
-interface CodeActionParams {
+export interface CodeActionParams extends WorkDoneProgressParams, PartialResultParams {
 	/**
 	 * The document in which the command was invoked.
 	 */
@@ -4708,7 +4774,7 @@ interface CodeActionParams {
 export type CodeActionKind = string;
 
 /**
- * A set of predefined code action kinds
+ * A set of predefined code action kinds.
  */
 export namespace CodeActionKind {
 
@@ -4718,17 +4784,17 @@ export namespace CodeActionKind {
 	export const Empty: CodeActionKind = '';
 
 	/**
-	 * Base kind for quickfix actions: 'quickfix'
+	 * Base kind for quickfix actions: 'quickfix'.
 	 */
 	export const QuickFix: CodeActionKind = 'quickfix';
 
 	/**
-	 * Base kind for refactoring actions: 'refactor'
+	 * Base kind for refactoring actions: 'refactor'.
 	 */
 	export const Refactor: CodeActionKind = 'refactor';
 
 	/**
-	 * Base kind for refactoring extraction actions: 'refactor.extract'
+	 * Base kind for refactoring extraction actions: 'refactor.extract'.
 	 *
 	 * Example extract actions:
 	 *
@@ -4741,7 +4807,7 @@ export namespace CodeActionKind {
 	export const RefactorExtract: CodeActionKind = 'refactor.extract';
 
 	/**
-	 * Base kind for refactoring inline actions: 'refactor.inline'
+	 * Base kind for refactoring inline actions: 'refactor.inline'.
 	 *
 	 * Example inline actions:
 	 *
@@ -4753,7 +4819,7 @@ export namespace CodeActionKind {
 	export const RefactorInline: CodeActionKind = 'refactor.inline';
 
 	/**
-	 * Base kind for refactoring rewrite actions: 'refactor.rewrite'
+	 * Base kind for refactoring rewrite actions: 'refactor.rewrite'.
 	 *
 	 * Example rewrite actions:
 	 *
@@ -4767,14 +4833,14 @@ export namespace CodeActionKind {
 	export const RefactorRewrite: CodeActionKind = 'refactor.rewrite';
 
 	/**
-	 * Base kind for source actions: `source`
+	 * Base kind for source actions: `source`.
 	 *
 	 * Source code actions apply to the entire file.
 	 */
 	export const Source: CodeActionKind = 'source';
 
 	/**
-	 * Base kind for an organize imports source action: `source.organizeImports`
+	 * Base kind for an organize imports source action: `source.organizeImports`.
 	 */
 	export const SourceOrganizeImports: CodeActionKind = 'source.organizeImports';
 }
@@ -4783,9 +4849,13 @@ export namespace CodeActionKind {
  * Contains additional diagnostic information about the context in which
  * a code action is run.
  */
-interface CodeActionContext {
+export interface CodeActionContext {
 	/**
-	 * An array of diagnostics.
+	 * An array of diagnostics known on the client side overlapping the range provided to the
+	 * `textDocument/codeAction` request. They are provided so that the server knows which
+	 * errors are currently presented to the user for the given range. There is no guarantee
+	 * that these accurately reflect the error state of the resource. The primary parameter
+	 * to compute code actions is the provided range.
 	 */
 	diagnostics: Diagnostic[];
 
@@ -4829,6 +4899,17 @@ export interface CodeAction {
 	diagnostics?: Diagnostic[];
 
 	/**
+	 * Marks this as a preferred action. Preferred actions are used by the `auto fix` command and can be targeted
+	 * by keybindings.
+	 *
+	 * A quick fix should be marked preferred if it properly addresses the underlying error.
+	 * A refactoring should be marked preferred if it is the most reasonable choice of actions to take.
+	 *
+	 * @since 3.15.0
+	 */
+	isPreferred?: boolean;
+
+	/**
 	 * The workspace edit this code action performs.
 	 */
 	edit?: WorkspaceEdit;
@@ -4842,15 +4923,8 @@ export interface CodeAction {
 }
 ```
 
+* 部分的結果: `(Command | CodeAction)[]`
 * エラー: エラーコードと `textDocument/codeAction` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* 次で定義される `CodeActionRegisterationOptions`:
-
-```ts
-export interface CodeActionRegistrationOptions extends TextDocumentRegistrationOptions, CodeActionOptions {
-}
-
-```
 
 #### Code Lens Request
 `Code Lens` リクエストは与えられたテキストドキュメントのコードレンズを計算するためにクライアントからサーバへ送信される。
