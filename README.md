@@ -3823,96 +3823,238 @@ type MarkedString = string | { language: string; value: string };
 * エラー: エラーコードと `textDocument/hover` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Signature Help Request
-`Signnature Help` リクエストは与えられたカーソル位置でのシグネチャ情報を要求す
-るためにクライアントからサーバへ送信される。
+`textDocument/signatureHelp` リクエストは与えられたカーソル位置でのシグネチャ情
+報を要求するためにクライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.signatureHelp`
+* プロパティタイプ: 次で定義される `SignatureHelpClientCapabilities`
+
+```ts
+export interface SignatureHelpClientCapabilities {
+	/**
+	 * シグネチャヘルプ機能の動的な登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * クライアントは次の `SignatureInformation` 固有のプロパティをサポートする。
+	 */
+	signatureInformation?: {
+		/**
+		 * クライアントは `documentation` プロパティに次のフォーマットをサポートす
+		 * る。順序はクライアントでのフォーマットの優先度を表わす。
+		 */
+		documentationFormat?: MarkupKind[];
+
+		/**
+		 * パラメータ情報固有のクライアントの機能。
+		 */
+		parameterInformation?: {
+			/**
+			 * クライアントは単純なラベル文字の代わりにラベルオフセットの処理をサポー
+			 * トする。
+			 *
+			 * @since 3.14.0
+			 */
+			labelOffsetSupport?: boolean;
+		};
+	};
+
+	/**
+	 * クライアントは `textDocument/signatureHelp` リクエストに追加のコンテキスト
+	 * 情報を送信することをサポートする。`contextSupport` が有効なクライアントは
+	 * `SignatureHelpOptions` の `retriggerCharacters` もサポートする。
+	 *
+	 * @since 3.15.0
+	 */
+	contextSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `signatureHelpProvider`
+* プロパティタイプ: 次で定義される `SignatureHelpOptions`:
+
+```ts
+export interface SignatureHelpOptions extends WorkDoneProgressOptions {
+	/**
+	 * シグネチャヘルプを自動で起動する文字の列。
+	 */
+	triggerCharacters?: string[];
+
+	/**
+	 * シグネチャヘルプを再起動する文字の列。
+	 *
+	 * これらのトリガ文字列はスグネチャヘルプがすでに表示されている場合にのみ有効
+	 * である。全てのトリガ文字列は再起動文字列にもカウントされる。
+	 *
+	 * @since 3.15.0
+	 */
+	retriggerCharacters?: string[];
+}
+```
+
+*登録オプション:* 次で定義される `SignatureHelpRegistrationOptions`:
+
+```ts
+export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrationOptions, SignatureHelpOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/signatureHelp`
-* パラメータ: [`TextDocumentPositionParams`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textdocumentpositionparams)
+* パラメータ: 次で定義される `SignatureHelpParams`:
+
+```ts
+export interface SignatureHelpParams extends TextDocumentPositionParams, WorkDoneProgressParams {
+	/**
+	 * シグネチャヘルプコンテキスト。クライアントが
+	 * `textDocument.signatureHelp.contextSupport === true` を用いて送信する場合
+	 * のみ表われる。
+	 *
+	 * @since 3.15.0
+	 */
+	context?: SignatureHelpContext;
+}
+
+/**
+ * シグネチャヘルプがどのように起動されたか。
+ *
+ * @since 3.15.0
+ */
+export namespace SignatureHelpTriggerKind {
+	/**
+	 * シグネチャヘルプはユーザが手動で、またはコマンドにより実行された。
+	 */
+	export const Invoked: 1 = 1;
+	/**
+	 * シグネチャヘルプはトリガ文字により起動された。
+	 */
+	export const TriggerCharacter: 2 = 2;
+	/**
+	 * シグネチャヘルプはカーソル移動またはドキュメントの中身の変更によって起動さ
+	 * れた。
+	 */
+	export const ContentChange: 3 = 3;
+}
+export type SignatureHelpTriggerKind = 1 | 2 | 3;
+
+/**
+ * textDocument/signatureHelp` リクエストが起動されたコンテキストについての追加
+ * 情報。
+ *
+ * @since 3.15.0
+ */
+export interface SignatureHelpContext {
+	/**
+	 * シグネチャヘルプが起動された原因。
+	 */
+	triggerKind: SignatureHelpTriggerKind;
+
+	/**
+	 * シグネチャヘルプが起動された原因。
+	 *
+	 * `triggerKind !== SignatureHelpTriggerKind.TriggerCharacter` のとき未定義と
+	 * なる。
+	 */
+	triggerCharacter?: string;
+
+	/**
+	 * 起動された時点ですでにシグネチャヘルプが表示されていた場合 `true` となる。
+	 *
+	 * 再起動はシグネチャヘルプがすでに有効である場合に発生し、トリガ文字の入力、
+	 * カーソル移動、ドキュメントの内容の変更などで引き起される場合がある。
+	 */
+	isRetrigger: boolean;
+
+	/**
+	 * 現在有効な `SignatureHelp`。
+	 *
+	 * `activeSignatureHelp` はユーザ操作によって有効なシグネチャとして更新された
+	 * `SignatureHelp.activeSignature` フィールドを持つ
+	 */
+	activeSignatureHelp?: SignatureHelp;
+}
+```
 
 *レスポンス:*
 * 結果: 次で定義される `SignatureHelp` | `null`:
 
 ```ts
 /**
- * Signature help represents the signature of something
- * callable. There can be multiple signature but only one
- * active and only one active parameter.
+ * シグネチャヘルプは呼び出し可能な何かのシグネチャを表示する。複数のシグネチャ
+ * が存在できるが、有効であり、有効なパラメータを持つのはただ一つである。
  */
 interface SignatureHelp {
 	/**
-	 * One or more signatures.
+	 * 一つ以上のシグネチャ。
 	 */
 	signatures: SignatureInformation[];
 
 	/**
-	 * The active signature. If omitted or the value lies outside the
-	 * range of `signatures` the value defaults to zero or is ignored if
-	 * `signatures.length === 0`. Whenever possible implementors should
-	 * make an active decision about the active signature and shouldn't
-	 * rely on a default value.
-	 * In future version of the protocol this property might become
-	 * mandatory to better express this.
+	 * 有効なシグネチャ。省略、または `signatures` の範囲外の値を指定した場合はデ
+	 * フォルトで 0 または `signatures.length === 0` の場合は無視される。可能な場
+	 * 合はいつでも、実装者は有効なシグネチャを決定するべきで、デフォルト値に頼る
+	 * べきではない。
+	 * 将来のプロトコルバージョンでこのことをより表現するためにこのプロパティは必
+	 * 須となるだろう。
 	 */
 	activeSignature?: number;
 
 	/**
-	 * The active parameter of the active signature. If omitted or the value
-	 * lies outside the range of `signatures[activeSignature].parameters`
-	 * defaults to 0 if the active signature has parameters. If
-	 * the active signature has no parameters it is ignored.
-	 * In future version of the protocol this property might become
-	 * mandatory to better express the active parameter if the
-	 * active signature does have any.
+	 * 有効なシグネチャの有効なパラメータ。省略、または
+	 * `signatures[activeSignature].parameters` の範囲外の値を指定した場合はデフォ
+	 * ルトで有効なシグネチャが `parameters` を持つ場合は0となる。有効なシグネチャ
+	 * が `parameters` を持たない場合は無視される。
+	 * 将来のプロトコルバージョンで有効なシグネチャが何かを持っている場合、有効な
+	 * パラメータをより表現するためにこのプロパティは必須となるだろう。
 	 */
 	activeParameter?: number;
 }
 
 /**
- * Represents the signature of something callable. A signature
- * can have a label, like a function-name, a doc-comment, and
- * a set of parameters.
+ * 呼び出し可能なシグネチャを表現する。シグネチャは関数名のようなラベルやコメン
+ * ト、パラメータを持つことができる。
  */
 interface SignatureInformation {
 	/**
-	 * The label of this signature. Will be shown in
-	 * the UI.
+	 * このシグネチャのラベル。UI 上で表示される。
 	 */
 	label: string;
 
 	/**
-	 * The human-readable doc-comment of this signature. Will be shown
-	 * in the UI but can be omitted.
+	 * このシグネチャの可読なコメント。UI 上で表示されるが省略可能である。
 	 */
 	documentation?: string | MarkupContent;
 
 	/**
-	 * The parameters of this signature.
+	 * このシグネチャのパラメータ。
 	 */
 	parameters?: ParameterInformation[];
 }
 
 /**
- * Represents a parameter of a callable-signature. A parameter can
- * have a label and a doc-comment.
+ * 呼び出し可能なシグネチャのパラメータを表現する。パラメータはラベルとコメント
+ * を持つことができる。
  */
 interface ParameterInformation {
 
 	/**
-	 * The label of this parameter information.
+	 * このパラメータ情報のラベル。
 	 *
-	 * Either a string or an inclusive start and exclusive end offsets within its containing
-	 * signature label. (see SignatureInformation.label). The offsets are based on a UTF-16
-	 * string representation as `Position` and `Range` does.
+	 * 文字列はたは開始を含み終了を含まないラベル内のオフセットのどちらかである。
+	 * (`SignatureInformation.label` を参照。オフセットは `Position` や `Range`
+	 * と同様に `UTF-16` 文字表現を基にする。
 	 *
-	 * *Note*: a label of type string should be a substring of its containing signature label.
-	 * Its intended use case is to highlight the parameter label part in the `SignatureInformation.label`.
+	 * *注意*: string 型のラベルはシグネチャラベルに含まれる部分文字列であるべき
+	 * である。これは`SignatureInformation.label` の `ParameterInformation.label`
+	 * 部分でハイライトするユースケースを意図している。
 	 */
 	label: string | [number, number];
 
 	/**
-	 * The human-readable doc-comment of this parameter. Will be shown
-	 * in the UI but can be omitted.
+	 * このパラメータの可読なコメント。UI 上で表示されるが省略可能である。
 	 */
 	documentation?: string | MarkupContent;
 }
