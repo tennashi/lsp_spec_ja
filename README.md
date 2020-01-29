@@ -4359,64 +4359,97 @@ interface ReferenceContext {
 * エラー: エラーコードと `textDocument/references` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Document Highlights Request
-`Document Hightlights` リクエストは与えられたテキスト位置のドキュメントハイライ
-トを解決するためにクライアントからサーバへ送信される。プログラミング言語の場合、
-通常、このファイルをスコープとするシンボルへの全ての参照をハイライトする。しか
-し、 `textDocument/documentHighlight` と `textDocument/references` を別のリクエ
-ストとしたのは最初のリクエストをより曖昧にできるようにするためである。シンボル
-はたいてい `DocumentHighlightKind` の `Read` または `Write` にマッチする、一方
-曖昧または文字的な一致には `Text` が用いられる。
+`textDocument/documentHighlight` リクエストは与えられたテキスト位置のドキュメン
+トハイライトを解決するためにクライアントからサーバへ送信される。プログラミング
+言語の場合、通常、このファイルをスコープとするシンボルへの全ての参照をハイライ
+トする。しかし、 `textDocument/documentHighlight` と `textDocument/references`
+を別のリクエストとしたのは最初のリクエストをより曖昧にできるようにするためであ
+る。シンボルはたいてい `DocumentHighlightKind` の `Read` または `Write` にマッ
+チする、一方曖昧または文字的な一致には `Text` が用いられる。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.documentHighlight`
+* プロパティタイプ: 次で定義される `DocumentHighlightClientCapabilities`:
+
+```ts
+export interface DocumentHighlightClientCapabilities {
+	/**
+	 * ドキュメントハイライト機能が動的な機能登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `documentHighlightProvider`
+* プロパティタイプ: `boolean | DocumentHighlightOptions`。`DocumentHighlightOptions` は次で定義される:
+
+```ts
+export interface DocumentHighlightOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `DocumentHighlightRegistrationOptions`:
+
+```ts
+export interface DocumentHighlightRegistrationOptions extends TextDocumentRegistrationOptions, DocumentHighlightOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/documentHighlight`
-* パラメータ: [`TextDocumentPositionParams`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textdocumentpositionparams)
+* パラメータ: 次で定義される `DocumentHighlightParams`:
+
+```ts
+export interface DocumentHighlightParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+}
+```
 
 *レスポンス:*
 * 結果: 次で定義される `DocumentHighlight[]` | `null`
 
 ```ts
 /**
- * A document highlight is a range inside a text document which deserves
- * special attention. Usually a document highlight is visualized by changing
- * the background color of its range.
+ * ドキュメントハイライトは特別に注意するテキストドキュメント内の範囲である。大
+ * 抵、ドキュメントハイライトはその範囲の背景色を変更することによって可視化され
+ * る。
  *
  */
 interface DocumentHighlight {
 	/**
-	 * The range this highlight applies to.
+	 * このハイライトが適用される範囲。
 	 */
 	range: Range;
 
 	/**
-	 * The highlight kind, default is DocumentHighlightKind.Text.
+	 * ハイライト種別、デフォルトでは `DocumentHighlightKind.Text`。
 	 */
 	kind?: number;
 }
 
 /**
- * A document highlight kind.
+ * ドキュメントハイライト種別。
  */
 export namespace DocumentHighlightKind {
 	/**
-	 * A textual occurrence.
+	 * テキストの出現。
 	 */
 	export const Text = 1;
 
 	/**
-	 * Read-access of a symbol, like reading a variable.
+	 * 変数の読み込みのような、シンボルの読み込み権限。
 	 */
 	export const Read = 2;
 
 	/**
-	 * Write-access of a symbol, like writing to a variable.
+	 * 変数への書き込みのような、シンボルの書き込み権限。
 	 */
 	export const Write = 3;
 }
 ```
 
+* 部分的結果: `DocumentHighlight[]`
 * エラー: エラーコードと `textDocument/documentHighlight` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Document Symbols Request
 `Document Symbols` リクエストはクライアントからサーバへ送信される。結果はいずれ
