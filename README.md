@@ -4452,11 +4452,60 @@ export namespace DocumentHighlightKind {
 * エラー: エラーコードと `textDocument/documentHighlight` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Document Symbols Request
-`Document Symbols` リクエストはクライアントからサーバへ送信される。結果はいずれ
-かである
+`textDocument/documentSymbol` リクエストはクライアントからサーバへ送信される。
+結果は以下のいずれかである。
 
 * `SymbolInformation[]` 与えられたテキストドキュメント内で見付かった全てのシンボルのリスト。シンボルの場所の範囲もシンボルのコンテナ名も階層構造の推測に用いるべきではない。
 * `DocumentSymbol[]` 与えられたテキストドキュメント内で見付かったシンボルの階層構造。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.documentSymbol`
+* プロパティタイプ: 次で定義される `DocumentSymbolClientCapabilities`:
+
+```ts
+export interface DocumentSymbolClientCapabilities {
+	/**
+	 * ドキュメントシンボル機能が動的な機能登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * `textDocument/documentSymbol` リクエストの `SymbolKind` 固有の機能
+	 */
+	symbolKind?: {
+		/**
+		 * クライアントがサポートするシンボル種別の値。このプロパティが存在する場
+		 * 合、クライアントは範囲外の値を適切に処理し、不明な場合はデフォルト値に
+		 * フォールバックすることも保証する。
+		 *
+		 * このプロパティが与えられていない場合、クライアントは LSP の初期バージョ
+		 * ンで定義されていた `File` から `Array` までのみをサポートする。
+		 */
+		valueSet?: SymbolKind[];
+	}
+
+	/**
+	 * クライアントは階層的なドキュメントシンボルをサポートする。
+	 */
+	hierarchicalDocumentSymbolSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `documentSymbolProvider`
+* プロパティタイプ: `boolean | DocumentSymbolOptions`。`DocumentSymbolOptions` は次で定義される:
+
+```ts
+export interface DocumentSymbolOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `DocumentSymbolRegistrationOptions`
+
+```ts
+export interface DocumentSymbolRegistrationOptions extends TextDocumentRegistrationOptions, DocumentSymbolOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/documentSymbol`
@@ -4465,7 +4514,7 @@ export namespace DocumentHighlightKind {
 ```ts
 interface DocumentSymbolParams {
 	/**
-	 * The text document.
+	 * テキストドキュメント。
 	 */
 	textDocument: TextDocumentIdentifier;
 }
@@ -4476,7 +4525,7 @@ interface DocumentSymbolParams {
 
 ```ts
 /**
- * A symbol kind.
+ * シンボル種別。
  */
 export namespace SymbolKind {
 	export const File = 1;
@@ -4508,37 +4557,38 @@ export namespace SymbolKind {
 }
 
 /**
- * Represents programming constructs like variables, classes, interfaces etc. that appear in a document. Document symbols can be
- * hierarchical and they have two ranges: one that encloses its definition and one that points to its most interesting range,
- * e.g. the range of an identifier.
+ * 変数、クラス、インターフェイスなどのプログラミングの構成物を表現する。これは
+ * ドキュメント上に表れる。ドキュメントシンボルは階層的で、二つの範囲を持つこと
+ * ができる: 一つはその定義を囲む範囲、もう一つはそれ自身が最も関心のある点につ
+ * いての範囲。例えば、識別子の範囲。
  */
 export class DocumentSymbol {
 
 	/**
-	 * The name of this symbol. Will be displayed in the user interface and therefore must not be
-	 * an empty string or a string only consisting of white spaces.
+	 * シンボル名。UI 上で表示されるため、空文字列や空白のみからなる文字列であっ
+	 * てはならない。
 	 */
 	name: string;
 
 	/**
-	 * More detail for this symbol, e.g the signature of a function.
+	 * このシンボルの更なる詳細、例えば関数のシグネチャ。
 	 */
 	detail?: string;
 
 	/**
-	 * The kind of this symbol.
+	 * このシンボルの種別。
 	 */
 	kind: SymbolKind;
 
 	/**
-	 * Indicates if this symbol is deprecated.
+	 * このシンボルが非推奨かどうかを指す。
 	 */
 	deprecated?: boolean;
 
 	/**
-	 * The range enclosing this symbol not including leading/trailing whitespace but everything else
-	 * like comments. This information is typically used to determine if the clients cursor is
-	 * inside the symbol to reveal in the symbol in the UI.
+	 * シンボルを囲み前後の空白を含まず、コメントなどのその他は含む範囲。この情報
+	 * は通常クライアントのカーソルが UI のシンボルで表示するためのシンボルに含ま
+	 * れるかどうかを判断するために使われる。
 	 */
 	range: Range;
 
@@ -4598,8 +4648,6 @@ interface SymbolInformation {
 ```
 
 * エラー: エラーコードと `textDocument/documentSymbol` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Code Action Request
 `Code Action` リクエストは与えられたテキストドキュメントと範囲上でコマンドを実
