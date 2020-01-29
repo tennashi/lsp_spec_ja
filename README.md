@@ -4303,31 +4303,60 @@ export interface ImplementationParams extends TextDocumentPositionParams, WorkDo
 * エラー: エラーコードと `textDocument/implementation` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Find References Request
-`Find References` リクエストは与えられたテキスト位置で記述されているシンボルの
-プロジェクト全体での参照を解決するためにクライアントからサーバへ送信される。
+`textDocument.references` リクエストは与えられたテキスト位置で記述されているシ
+ンボルのプロジェクト全体での参照を解決するためにクライアントからサーバへ送信さ
+れる。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.references`
+* プロパティタイプ: 次で定義される `ReferenceClientCapabilities`
+
+```ts
+export interface ReferenceClientCapabilities {
+	/**
+	 * 参照解決機能が動的な機能登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `referencesProvider`
+* プロパティタイプ: `boolean | ReferenceOptions`。`ReferenceOptions` は次で定義される:
+
+```ts
+export interface ReferenceOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `ReferenceRegistrationOptions`:
+
+```ts
+export interface ReferenceRegistrationOptions extends TextDocumentRegistrationOptions, ReferenceOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/references`
 * パラメータ: 次で定義される `ReferenceParams`:
 
 ```ts
-interface ReferenceParams extends TextDocumentPositionParams {
+export interface ReferenceParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
 	context: ReferenceContext
 }
 
 interface ReferenceContext {
 	/**
-	 * Include the declaration of the current symbol.
+	 * 現在のシンボルの宣言を含む。
 	 */
 	includeDeclaration: boolean;
 }
 ```
 
 *レスポンス:*
-* 結果: [`Location`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#location) | `null`
+* 結果: `Location[]` | `null`
+* 部分的結果: `Location[]`
 * エラー: エラーコードと `textDocument/references` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Document Highlights Request
 `Document Hightlights` リクエストは与えられたテキスト位置のドキュメントハイライ
