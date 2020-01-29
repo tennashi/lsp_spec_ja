@@ -4124,25 +4124,61 @@ export interface DeclarationParams extends TextDocumentPositionParams, WorkDoneP
 * エラー: エラーコードと `textDocument/declaration` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Goto Definition Request
-バージョン 3.14.0 から
+`textDocument/definition` リクエストは与えられたテキストドキュメント位置のシン
+ボルの定義位置を解決するためにクライアントからサーバへ送信される。
 
-`Goto Definition` リクエストは与えられたテキストドキュメント位置のシンボルの定
-義位置を解決するためにクライアントからサーバへ送信される。
+結果の `LocationLink[]` 型はバージョン 3.14.0 で導入され、一致するクライアント
+機能 `textDocument.definition.linkSupport` に依存する。
 
-結果の
-[`LocationLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#locationlink)[]
-型はバージョン 3.14.0 で導入され、一致するクライアント機能
-`clientCapabilities.textDocument.declaration.linkSupport` に依存する。
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.definition`
+* プロパティタイプ: 次で定義される `DefinitionClientCapabilities`
+
+```ts
+export interface DefinitionClientCapabilities {
+	/**
+	 * 定義元参照機能が動的な機能登録をサポートするかどうか。
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * クライアントはリンク形式の追加メタデータをサポートする。
+	 *
+	 * @since 3.14.0
+	 */
+	linkSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `definitionProvider`
+* プロパティタイプ: `boolean | DefinitionOptions` 。`DefinitionOptions` は次で定義される:
+
+```ts
+export interface DefinitionOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `DefinitionRegistrationOptions`:
+
+```ts
+export interface DefinitionRegistrationOptions extends TextDocumentRegistrationOptions, DefinitionOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/definition`
-* パラメータ: [`TextDocumentPositionParams`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textdocumentpositionparams)
+* パラメータ: 次で定義される `DefinitionParams`:
+
+```ts
+export interface DefinitionParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+}
+```
 
 *レスポンス:*
-* 結果: [`Location`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#location) | [`Location`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#location)[] | [`LocationLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#locationlink)[] | `null`
+* 結果: `Location` | `Location[]` | `LocationLink[]` | `null`
+* 部分的結果: `Location[]` | `LocationLink[]`
 * エラー: エラーコードと `textDocument/definition` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Goto Type Definition Request
 バージョン 3.6.0 から
