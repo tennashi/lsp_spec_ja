@@ -5525,33 +5525,61 @@ interface DocumentOnTypeFormattingParams {
 * 結果: [`TextEdit`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textedit)[] | `null` フォーマットされたドキュメントへの編集が記述される。
 * エラー: エラーコードと `textDocument/onTypeFormatting` リクエスト中に発生した例外がセットされたメッセージ。
 
-*登録オプション:* 次で定義される `DocumentOnTypeFormattingRegistrationOptions`:
+#### Rename Request
+`textDocument/rename` リクエストは、クライアントがシンボルのワークスペース全体
+でのリネームを行なうために、サーバがワークスペースへの変更を計算するために、ク
+ライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.rename`
+* プロパティタイプ: 次で定義される `RenameClientCapabilities`:
 
 ```ts
-export interface DocumentOnTypeFormattingRegistrationOptions extends TextDocumentRegistrationOptions {
+export interface RenameClientCapabilities {
 	/**
-	 * A character on which formatting should be triggered, like `}`.
+	 * Whether rename supports dynamic registration.
 	 */
-	firstTriggerCharacter: string;
-	/**
-	 * More trigger characters.
-	 */
-	moreTriggerCharacter?: string[]
-}
+	dynamicRegistration?: boolean;
 
+	/**
+	 * Client supports testing for validity of rename operations
+	 * before execution.
+	 *
+	 * @since version 3.12.0
+	 */
+	prepareSupport?: boolean;
+}
 ```
 
-#### Rename Request
-`Rename` リクエストは、クライアントがシンボルのワークスペース全体でのリネームを
-行なうために、サーバがワークスペースへの変更を計算するために、クライアントから
-サーバへ送信される。
+*サーバ機能:*
+* プロパティパス(省略可能): `renameProvider`
+* プロパティタイプ: `boolean | RenameOptions`。`RenameOptions` は次で定義される。
+
+`RenameOptions` は最初の `initialize` リクエストで `prepareSupport` をサポート
+する状態のクライアントのときのみだけ指定される。
+
+```ts
+export interface RenameOptions extends WorkDoneProgressOptions {
+	/**
+	 * Renames should be checked and tested before being executed.
+	 */
+	prepareProvider?: boolean;
+}
+```
+
+*登録オプション:* 次で定義される `RenameRegistrationOptions`:
+
+```ts
+export interface RenameRegistrationOptions extends TextDocumentRegistrationOptions, RenameOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/rename`
 * パラメータ: 次で定義される `RenameParams`
 
 ```ts
-interface RenameParams {
+interface RenameParams extends WorkDoneProgressParams {
 	/**
 	 * The document to rename.
 	 */
@@ -5572,20 +5600,8 @@ interface RenameParams {
 ```
 
 *レスポンス:*
-* 結果: [`WorkspaceEdit`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#workspaceedit) | `null` ワークスペースへの変更を記述する
+* 結果: `WorkspaceEdit` | `null`。ワークスペースへの変更を記述する
 * エラー: エラーコードと `textDocument/rename` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* 次で定義される `RenameRegistrationOptions`:
-
-```ts
-export interface RenameRegistrationOptions extends TextDocumentRegistrationOptions {
-	/**
-	 * Renames should be checked and tested for validity before being executed.
-	 */
-	prepareProvider?: boolean;
-}
-
-```
 
 #### Prepare Rename Request
 バージョン 3.12.0 から
