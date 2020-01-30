@@ -5736,6 +5736,88 @@ export interface FoldingRange {
 * 部分的結果: `FoldingRange[]`
 * エラー: エラーコードと `textDocument/foldingRange` リクエスト中に発生した例外がセットされたメッセージ。
 
+#### Selection Range Request
+バージョン 3.15.0 から
+
+`textDocument/selectionRange` リクエストは与えられた複数の位置で推奨される選択
+範囲を返すためにクライアントからサーバへ送信される。選択範囲はユーザが関心のあ
+る選択位置の周囲である。
+
+返却された配列の選択範囲は与えられた同じインデックスのパラメータ内の位置である。
+よって、`positions[i]` は `result[i].range` に含まれていなければならない。
+
+典型的には、必須ではないが、選択範囲は構文木のノードに対応する。
+
+*クライアント機能:
+* プロパティパス(省略可能): `textDocument.selectionRange`
+* プロパティタイプ: 次で定義される `SelectionRangeClientCapabilities`:
+
+```ts
+export interface SelectionRangeClientCapabilities {
+	/**
+	 * 実装が選択範囲機能の動的な登録をサポートするかどうか。`true` である場合は
+	 * クライアントは対応するサーバ機能の新しい
+	 * `SelectionRangeRegistrationOptions` をサポートする。
+	 */
+	dynamicRegistration?: boolean;
+}
+
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `selectionRangeProvider`
+* プロパティタイプ: `boolean | SelectionRangeOptions | SelectionRangeRegistrationOptions`。`SelectionRangeOptions` は次で定義される:
+
+```ts
+export interface SelectionRangeOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `SelectionRangeRegistrationOptions`:
+
+```ts
+export interface SelectionRangeRegistrationOptions extends SelectionRangeOptions, TextDocumentRegistrationOptions, StaticRegistrationOptions {
+}
+```
+
+*リクエスト:*
+* メソッド: `textDocument/selectionRange`
+* パラメータ: 次で定義される `SelectionRangeParams`
+
+```ts
+export interface SelectionRangeParams extends WorkDoneProgressParams, PartialResultParams {
+	/**
+	 * The text document.
+	 */
+	textDocument: TextDocumentIdentifier;
+
+	/**
+	 * The positions inside the text document.
+	 */
+	positions: Position[];
+}
+```
+
+*レスポンス:*
+* 結果: 次で定義される `SelectionRange[] | null`
+
+```ts
+export interface SelectionRange {
+	/**
+	 * この選択範囲の `Range`
+	 */
+	range: Range;
+	/**
+	 * この範囲を含む親の選択範囲。よって `parent.range` は `this.range` を含ま
+	 * なければならない。
+	 */
+	parent?: SelectionRange;
+}
+```
+
+* 部分的結果: `SelectionRange[]`
+* エラー: エラーコードと `textDocument/selectionRange` リクエスト中に発生した例外がセットされたメッセージ。
+
 ### Implementation considerations
 言語サーバは大抵別のプロセスとして動作し、クライアントとは非同期に通信する。加
 えてクライアントは大抵リクエストがペンディング状態であってもソースコードへの変
