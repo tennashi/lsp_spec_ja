@@ -5620,14 +5620,56 @@ interface RenameParams extends WorkDoneProgressParams {
 #### Folding Range Request
 バージョン 3.10.0 から
 
-`Folding Range` リクエストは与えられたテキストドキュメントの折り畳まれた全て範囲を返すためにクライアントからサーバへ送信される。
+`textDocument/foldingRange` リクエストは与えられたテキストドキュメントの折り畳
+む全て範囲を返すためにクライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.foldingRange`
+* プロパティタイプ: 次で定義される `FoldingRangeClientCapabilities`
+
+```ts
+export interface FoldingRangeClientCapabilities {
+	/**
+	 * Whether implementation supports dynamic registration for folding range providers. If this is set to `true`
+	 * the client supports the new `FoldingRangeRegistrationOptions` return value for the corresponding server
+	 * capability as well.
+	 */
+	dynamicRegistration?: boolean;
+	/**
+	 * The maximum number of folding ranges that the client prefers to receive per document. The value serves as a
+	 * hint, servers are free to follow the limit.
+	 */
+	rangeLimit?: number;
+	/**
+	 * If set, the client signals that it only supports folding complete lines. If set, client will
+	 * ignore specified `startCharacter` and `endCharacter` properties in a FoldingRange.
+	 */
+	lineFoldingOnly?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `foldingRangeProvider`
+* プロパティタイプ: `boolean | FoldingRangeOptions | FoldingRangeRegistrationOptions`。`FoldingRangeOptions` は次のように定義される。
+
+```ts
+export interface FoldingRangeOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `FoldingRangeRegistrationOptions`:
+
+```ts
+export interface FoldingRangeRegistrationOptions extends TextDocumentRegistrationOptions, FoldingRangeOptions, StaticRegistrationOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/foldingRange`
 * パラメータ: 次で定義される `FoldingRangeParams`
 
 ```ts
-export interface FoldingRangeParams {
+export interface FoldingRangeParams extends WorkDoneProgressParams, PartialResultParams {
 	/**
 	 * The text document.
 	 */
@@ -5636,7 +5678,7 @@ export interface FoldingRangeParams {
 ```
 
 *レスポンス:*
-* 結果: 次で定義される `FoldingRange[]` | `null`
+* 結果: 次で定義される `FoldingRange[] | null`
 
 ```ts
 /**
@@ -5691,9 +5733,8 @@ export interface FoldingRange {
 }
 ```
 
+* 部分的結果: `FoldingRange[]`
 * エラー: エラーコードと `textDocument/foldingRange` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 ### Implementation considerations
 言語サーバは大抵別のプロセスとして動作し、クライアントとは非同期に通信する。加
