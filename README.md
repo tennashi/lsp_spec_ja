@@ -5296,15 +5296,44 @@ interface ColorPresentation {
 * エラー: エラーコードと `textDocument/colorPresentation` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Document Formatting Request
-`Document Formatting` リクエストはドキュメント全体をフォーマットするためにクラ
-イアントからサーバへ送信される。
+`textDoucment/formatting` リクエストはドキュメント全体をフォーマットするために
+クライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.formatting`
+* プロパティタイプ: 次で定義される `DocumentFormattingClientCapabilities`:
+
+```ts
+export interface DocumentFormattingClientCapabilities {
+	/**
+	 * Whether formatting supports dynamic registration.
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `documentFormattingProvider`
+* プロパティタイプ: `boolean | DocumentFormattingOptions`。`DocumentFormattingOptons` は次で定義される:
+
+```ts
+export interface DocumentFormattingOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `DocumentFormattingRegistrationOptions`:
+
+```ts
+export interface DocumentFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentFormattingOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/formatting`
 * パラメータ: 次で定義される `DocumentFormattingParams`
 
 ```ts
-interface DocumentFormattingParams {
+interface DocumentFormattingParams extends WorkDoneProgressParams {
 	/**
 	 * The document to format.
 	 */
@@ -5331,6 +5360,27 @@ interface FormattingOptions {
 	insertSpaces: boolean;
 
 	/**
+	 * Trim trailing whitespace on a line.
+	 *
+	 * @since 3.15.0
+	 */
+	trimTrailingWhitespace?: boolean;
+
+	/**
+	 * Insert a newline character at the end of the file if one does not exist.
+	 *
+	 * @since 3.15.0
+	 */
+	insertFinalNewline?: boolean;
+
+	/**
+	 * Trim all newlines after the final newline at the end of the file.
+	 *
+	 * @since 3.15.0
+	 */
+	trimFinalNewlines?: boolean;
+
+	/**
 	 * Signature for further properties.
 	 */
 	[key: string]: boolean | number | string;
@@ -5338,10 +5388,8 @@ interface FormattingOptions {
 ```
 
 *レスポンス:*
-* 結果: [`TextEdit`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textedit)[] | `null` フォーマットされたドキュメントへの編集が記述される。
+* 結果: `TextEdit[]` | `null`。フォーマットされたドキュメントへの編集が記述される。
 * エラー: エラーコードと `textDocument/formatting` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Document Range Formatting Request
 `Document Range Formatting` リクエストは与えられたドキュメントの範囲をフォーマッ
