@@ -5010,8 +5010,8 @@ interface CodeLens {
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
 
 #### Code Lens Resolve Request
-`Code Lens Resolve` リクエストは与えられたコードレンズアイテムのコマンドを解決
-するためにクライアントからサーバへ送信される。
+`codeLens/resolve` リクエストは与えられたコードレンズアイテムのコマンドを解決す
+るためにクライアントからサーバへ送信される。
 
 *リクエスト:*
 * メソッド: `codeLens/resolve`
