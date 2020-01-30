@@ -5235,19 +5235,21 @@ interface Color {
 バージョン 3.6.0 から
 
 `Color Presentation` リクエストは与えられた位置の色値の表現一覧を取得するために
-クライアントからサーバへ送信される。クライアントはこの結果を
+クライアントからサーバへ送信される。クライアントはこの結果を以下の用途に使用で
+きる。
 
 * 色参照を編集する
 * カラーピッカーの中で表示し、表現をユーザに選択させる
 
-ことに使用できる。
+このリクエストは `textDocument/documentColor` リクエストの解決のために送信され
+るため、特別な機能や登録オプションを持たない。
 
 *リクエスト:*
 * メソッド: `textDocument/colorPresentation`
 * パラメータ: 次で定義される `ColorPresentationParams`
 
 ```ts
-interface ColorPresentationParams {
+interface ColorPresentationParams extends WorkDoneProgressParams, PartialResultParams {
 	/**
 	 * The text document.
 	 */
@@ -5290,6 +5292,7 @@ interface ColorPresentation {
 }
 ```
 
+* 部分的結果: `ColorPresentation[]`
 * エラー: エラーコードと `textDocument/colorPresentation` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Document Formatting Request
