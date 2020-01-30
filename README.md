@@ -5606,18 +5606,16 @@ interface RenameParams extends WorkDoneProgressParams {
 #### Prepare Rename Request
 バージョン 3.12.0 から
 
-`Prepare Rename` リクエストは与えられた場所でのリネーム処理の妥当性をテストする
-ためにクライアントからサーバへ送信される。
+`textDocument/prepareRename` リクエストは与えられた場所でのリネーム処理の妥当性
+をテストするためにクライアントからサーバへ送信される。
 
 *リクエスト:*
 * メソッド: `textDocument/prepareRename`
-* パラメータ: [`TextDocumentPositionParams`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textdocumentpositionparams)
+* パラメータ: `TextDocumentPositionParams`
 
 *レスポンス:*
-* 結果: [`Range`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#range) | `{ range: Range, placeholder: string }` | `null` リネームする文字列の範囲とオプションでリネームする文字列のプレースホルダを記述する。`null` が返された場合、与えられた位置での `textDocument/rename` リクエストは無効であるとみなす。
+* 結果: `Range` | `{ range: Range, placeholder: string }` | `null` リネームする文字列の範囲とオプションでリネームする文字列のプレースホルダを記述する。`null` が返された場合、与えられた位置での `textDocument/rename` リクエストは無効であるとみなす。
 * エラー: エラーコードと `textDocument/prepareRename` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:*
 
 #### Folding Range Request
 バージョン 3.10.0 から
