@@ -4927,14 +4927,48 @@ export interface CodeAction {
 * エラー: エラーコードと `textDocument/codeAction` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Code Lens Request
-`Code Lens` リクエストは与えられたテキストドキュメントのコードレンズを計算するためにクライアントからサーバへ送信される。
+`textDocument/codeLens` リクエストは与えられたテキストドキュメントのコードレン
+ズを計算するためにクライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.codeLens`
+* プロパティタイプ: 次で定義される `CodeLensClientCapabilities`
+
+```ts
+export interface CodeLensClientCapabilities {
+	/**
+	 * Whether code lens supports dynamic registration.
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `codeLensProvider`
+* プロパティタイプ: 次で定義される `CodeLensOptions`
+
+```ts
+export interface CodeLensOptions extends WorkDoneProgressOptions {
+	/**
+	 * Code lens has a resolve provider as well.
+	 */
+	resolveProvider?: boolean;
+}
+```
+
+*登録オプション:* 次で定義される `CodeLensRegistrationOptions`:
+
+```ts
+export interface CodeLensRegistrationOptions extends TextDocumentRegistrationOptions, CodeLensOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/codeLens`
 * パラメータ: 次で定義される `CodeLensParams`:
 
 ```ts
-interface CodeLensParams {
+interface CodeLensParams extends WorkDoneProgressParams, PartialResultParams {
 	/**
 	 * The document to request code lens for.
 	 */
@@ -4972,19 +5006,8 @@ interface CodeLens {
 }
 ```
 
+* 部分的結果: `CodeLens[]`
 * エラー: エラーコードとリクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* 次で定義される `CodeLensRegistrationOptions`:
-
-```ts
-export interface CodeLensRegistrationOptions extends TextDocumentRegistrationOptions {
-	/**
-	 * Code lens has a resolve provider as well.
-	 */
-	resolveProvider?: boolean;
-}
-
-```
 
 #### Code Lens Resolve Request
 `Code Lens Resolve` リクエストは与えられたコードレンズアイテムのコマンドを解決
