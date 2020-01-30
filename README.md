@@ -5392,15 +5392,44 @@ interface FormattingOptions {
 * エラー: エラーコードと `textDocument/formatting` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Document Range Formatting Request
-`Document Range Formatting` リクエストは与えられたドキュメントの範囲をフォーマッ
-トするためにクライアントからサーバへ送信される。
+`textDocument/rangeFormatting` リクエストは与えられたドキュメントの範囲をフォー
+マットするためにクライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.rangeFormatting`
+* プロパティタイプ: 次で定義される `DocumentRangeFormattingClientCapabilities`:
+
+```ts
+export interface DocumentRangeFormattingClientCapabilities {
+	/**
+	 * Whether formatting supports dynamic registration.
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `documentRangeFormattingProvider`
+* プロパティタイプ: `boolean | DocumentRangeFormattingOptions`。`DocumentRangeFormattingOptons` は次で定義される:
+
+```ts
+export interface DocumentRangeFormattingOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `DocumentRangeFormattingRegistrationOptions`:
+
+```ts
+export interface DocumentRangeFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentRangeFormattingOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/rangeFormatting`
 * パラメータ: 次で定義される `DocumentRangeFormattingParams`
 
 ```ts
-interface DocumentRangeFormattingParams {
+interface DocumentRangeFormattingParams extends WorkDoneProgressParams {
 	/**
 	 * The document to format.
 	 */
@@ -5419,10 +5448,8 @@ interface DocumentRangeFormattingParams {
 ```
 
 *レスポンス:*
-* 結果: [`TextEdit`](https://microsoft.github.io/language-server-protocol/specifications/specification-3-14/#textedit)[] | `null` フォーマットされたドキュメントへの編集が記述される。
+* 結果: `TextEdit[]` | `null`。フォーマットされたドキュメントへの編集が記述される。
 * エラー: エラーコードと `textDocument/rangeFormatting` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* `TextDocumentRegistrationOptions`
 
 #### Document on Type Formatting Request
 `Document on Type Formatting` リクエストは入力中のドキュメントをフォーマットす
