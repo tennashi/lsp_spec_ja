@@ -5022,15 +5022,55 @@ interface CodeLens {
 * エラー: エラーコードと `codeLens/resolve` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Document Link Request
-`Document Link` リクエストはドキュメントへのリンクを要求するためにクライアント
-からサーバへ送信される。
+`textDocument/documentLink` リクエストはドキュメントへのリンクを要求するために
+クライアントからサーバへ送信される。
+
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.documentLink`
+* プロパティタイプ: 次で定義される `DocumentLinkClientCapabilities`:
+
+```ts
+export interface DocumentLinkClientCapabilities {
+	/**
+	 * Whether document link supports dynamic registration.
+	 */
+	dynamicRegistration?: boolean;
+
+	/**
+	 * Whether the client supports the `tooltip` property on `DocumentLink`.
+	 *
+	 * @since 3.15.0
+	 */
+	tooltipSupport?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `documentLinkProvider`
+* プロパティタイプ: 次で定義される `DocumentLinkOptions`:
+
+```ts
+export interface DocumentLinkOptions extends WorkDoneProgressOptions {
+	/**
+	 * Document links have a resolve provider as well.
+	 */
+	resolveProvider?: boolean;
+}
+```
+
+登録オプション: 次で定義される `DocumentLinkRegistrationOptions`:
+
+```ts
+export interface DocumentLinkRegistrationOptions extends TextDocumentRegistrationOptions, DocumentLinkOptions {
+}
+```
 
 *リクエスト:*
 * メソッド: `textDocument/documentLink`
 * パラメータ: 次で定義される `DocumentLinkParams`:
 
 ```ts
-interface DocumentLinkParams {
+interface DocumentLinkParams extends WorkDoneProgressParams, PartialResultParams {
 	/**
 	 * The document to provide document links for.
 	 */
@@ -5039,7 +5079,7 @@ interface DocumentLinkParams {
 ```
 
 *レスポンス:*
-* 結果: `DocumentLink` | `null` の配列
+* 結果: `DocumentLink[]` | `null`
 
 ```ts
 /**
@@ -5051,10 +5091,23 @@ interface DocumentLink {
 	 * The range this link applies to.
 	 */
 	range: Range;
+
 	/**
 	 * The uri this link points to. If missing a resolve request is sent later.
 	 */
 	target?: DocumentUri;
+
+	/**
+	 * The tooltip text when you hover over this link.
+	 *
+	 * If a tooltip is provided, is will be displayed in a string that includes instructions on how to
+	 * trigger the link, such as `{0} (ctrl + click)`. The specific instructions vary depending on OS,
+	 * user settings, and localization.
+	 *
+	 * @since 3.15.0
+	 */
+	tooltip?: string;
+
 	/**
 	 * A data entry field that is preserved on a document link between a
 	 * DocumentLinkRequest and a DocumentLinkResolveRequest.
@@ -5063,19 +5116,8 @@ interface DocumentLink {
 }
 ```
 
+* 部分的結果: `DocumentLink[]`
 * エラー: エラーコードと `textDocument/documentLink` リクエスト中に発生した例外がセットされたメッセージ。
-
-*登録オプション:* 次で定義される `DocumentLinkRegsitrationOptions`:
-
-```ts
-export interface DocumentLinkRegistrationOptions extends TextDocumentRegistrationOptions {
-	/**
-	 * Document links have a resolve provider as well.
-	 */
-	resolveProvider?: boolean;
-}
-
-```
 
 #### Document Link Resolve Request
 `Document Link Resolve` リクエストは与えられた `DocumentLink` を解決するために
