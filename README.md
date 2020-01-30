@@ -5455,6 +5455,44 @@ interface DocumentRangeFormattingParams extends WorkDoneProgressParams {
 `Document on Type Formatting` リクエストは入力中のドキュメントをフォーマットす
 るためにクライアントからサーバへ送信される。
 
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.onTypeFormatting`
+* プロパティタイプ: 次で定義される `DocumentOnTypeFormattingClientCapabilities`:
+
+```ts
+export interface DocumentOnTypeFormattingClientCapabilities {
+	/**
+	 * Whether on type formatting supports dynamic registration.
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `documentOnTypeFormattingProvider`
+* プロパティタイプ: `boolean | DocumentOnTypeFormattingOptions`。`DocumentOnTypeFormattingOptons` は次で定義される:
+
+```ts
+export interface DocumentOnTypeFormattingOptions {
+	/**
+	 * A character on which formatting should be triggered, like `}`.
+	 */
+	firstTriggerCharacter: string;
+
+	/**
+	 * More trigger characters.
+	 */
+	moreTriggerCharacter?: string[];
+}
+```
+
+*登録オプション:* 次で定義される `DocumentOnTypeFormattingRegistrationOptions`:
+
+```ts
+export interface DocumentOnTypeFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentOnTypeFormattingOptions {
+}
+```
+
 *リクエスト:*
 * メソッド: `textDocument/onTypeFormatting`
 * パラメータ: 次で定義される `DocumentOnTypeFormattingParams`:
