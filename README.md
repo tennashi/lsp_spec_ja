@@ -5120,8 +5120,8 @@ interface DocumentLink {
 * エラー: エラーコードと `textDocument/documentLink` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Document Link Resolve Request
-`Document Link Resolve` リクエストは与えられた `DocumentLink` を解決するために
-クライアントからサーバへ送信される。
+`documentLink/resolve` リクエストは与えられた `DocumentLink` を解決するためにク
+ライアントからサーバへ送信される。
 
 *リクエスト:*
 * メソッド: `documentLink/resolve`
