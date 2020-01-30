@@ -5143,12 +5143,41 @@ interface DocumentLink {
 * 参照の横に実際の色のカラーボックスを表示する
 * 色参照の編集時にカラーピッカーを表示する
 
+*クライアント機能:*
+* プロパティパス(省略可能): `textDocument.colorProvider`
+* プロパティタイプ: 次で定義される `DocumentColorClientCapabilties`
+
+```ts
+export interface DocumentColorClientCapabilities {
+	/**
+	 * Whether document color supports dynamic registration.
+	 */
+	dynamicRegistration?: boolean;
+}
+```
+
+*サーバ機能:*
+* プロパティパス(省略可能): `colorProvider`
+* プロパティタイプ: `boolean | DocumentColorOptions | DocumentColorRegistrationOptions`。`DocumentColorOptions` は次で定義される:
+
+```ts
+export interface DocumentColorOptions extends WorkDoneProgressOptions {
+}
+```
+
+*登録オプション:* 次で定義される `DocumentColorRegistrationOptions`:
+
+```ts
+export interface DocumentColorRegistrationOptions extends TextDocumentRegistrationOptions, StaticRegistrationOptions, DocumentColorOptions {
+}
+```
+
 *リクエスト:*
 * メソッド: `textDocument/documentColor`
 * パラメータ: 次で定義される `DocumentColorParams`
 
 ```ts
-interface DocumentColorParams {
+interface DocumentColorParams extends WorkDoneProgressParams, PartialResultParams {
 	/**
 	 * The text document.
 	 */
@@ -5199,6 +5228,7 @@ interface Color {
 }
 ```
 
+* 部分的結果: `ColorInformation[]`
 * エラー: エラーコードと `textDocument/documentColor` リクエスト中に発生した例外がセットされたメッセージ。
 
 #### Color Presentation Request
