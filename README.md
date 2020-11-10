@@ -1651,6 +1651,20 @@ interface ClientCapabilities {
 		* `workspace/executeCommand` リクエスト固有の機能。
 		*/
 		executeCommand?: ExecuteCommandClientCapabilities;
+		
+		/**
+		* クライアントはワークスペースフォルダをサポートします。
+		* 
+		* Since 3.6.0
+		*/
+		workspaceFolders?: boolean;
+
+		/**
+		* クライアントは `workspace/configuration` リクエストをサポートします。
+		* 
+		* Since 3.6.0
+		*/
+		configuration?: boolean;
 	};
 
 	/**
@@ -1658,6 +1672,20 @@ interface ClientCapabilities {
 	 */
 	textDocument?: TextDocumentClientCapabilities;
 
+	/**
+	 *
+	 */
+	window?: {
+	    /**
+	     * クライアントが進行状況の通知のハンドリングをサポートするかどうか。
+	     * もしこのフラグが設定されるなら、サーバーはリクエスト固有のサーバー機能の
+	     * `workDoneProgress` プロパティでレポートすることができます。
+	     *
+	     * Since 3.15.0
+	     */
+	    workDoneProgress?: boolean;
+	}
+	
 	/**
 	 * 実験的なクライアント機能。
 	 */
