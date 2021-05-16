@@ -1588,7 +1588,7 @@ export interface TextDocumentClientCapabilities {
 	/**
 	 * `textDocument/publishDiagnostics` 通知固有の機能。
 	 */
-	publishDiagnostics?: PublishDiabnosticsClientCapabilities;
+	publishDiagnostics?: PublishDiagnosticsClientCapabilities;
 
 	/**
 	 * `textDocument/foldingRange` リクエスト固有の機能。
